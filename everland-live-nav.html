@@ -1208,6 +1208,9 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
+  .accent-blue-600 {
+    accent-color: var(--color-blue-600);
+  }
   .accent-everland-600 {
     accent-color: var(--color-everland-600);
   }
@@ -2194,6 +2197,10 @@
             <div class="flex-1"><p class="font-bold text-sm">현장 위치 보정</p><p class="text-[11px] text-slate-500" id="calibGps">GPS 대기 중</p></div>
         </div>
         <p class="text-xs text-slate-600 dark:text-slate-400 px-4 py-3 bg-blue-50 dark:bg-blue-900/20 shrink-0">그 장소 <b>입구(길 위)</b>에 서서 GPS 오차가 ±15m 이하일 때 <b>여기로</b>를 누르세요. 그 장소 좌표가 지금 내 위치로 바뀌고, 경로·도보시간도 다시 계산됩니다. 보정값은 이 폰에 저장돼요.</p>
+        <label class="flex items-center gap-3 px-4 py-3 border-b border-slate-200 dark:border-slate-800 shrink-0">
+            <input type="checkbox" id="calibShiftAll" class="w-5 h-5 accent-blue-600">
+            <span class="text-xs"><b>지도 전체도 같이 이동</b><br><span class="text-slate-500">처음 한 번은 켜두세요. 모든 장소가 같은 방향·거리만큼 옮겨져요. 이후엔 끄고 장소별로 미세 보정하세요.</span></span>
+        </label>
         <div id="calibList" class="flex-1 overflow-y-auto p-3 space-y-2"></div>
         <div class="p-3 grid grid-cols-2 gap-2 border-t border-slate-200 dark:border-slate-800 shrink-0">
             <button onclick="copyCalib()" class="bg-slate-900 text-white text-xs font-bold py-3 rounded-xl"><i class="fa-regular fa-copy"></i> 보정값 복사</button>
@@ -2310,7 +2317,10 @@ const nodes = {
     HURRICANE: { name: "허리케인", lat: 37.2905, lng: 127.1965, zone: "아메리칸 어드벤처" }
 };
 // 현장에서 보정한 좌표가 있으면 덮어씀
+Object.values(nodes).forEach(n => { n.lat0 = n.lat; n.lng0 = n.lng; });   // 원래 좌표 보관
 try {
+    const sh = JSON.parse(localStorage.getItem('ev_globalShift') || 'null');
+    if (sh) Object.values(nodes).forEach(n => { n.lat += sh.dLat; n.lng += sh.dLng; });
     const ov = JSON.parse(localStorage.getItem('ev_nodeFix') || '{}');
     Object.entries(ov).forEach(([k, v]) => { if (nodes[k]) { nodes[k].lat = v.lat; nodes[k].lng = v.lng; nodes[k].fixed = true; } });
 } catch (e) {}
@@ -3622,6 +3632,8 @@ let calibTimer = null;
 function openCalib() {
     const el = document.getElementById('calibScreen');
     el.classList.remove('hidden'); el.classList.add('flex');
+    // 아직 아무 보정도 안 했으면 전체 이동을 기본으로
+    document.getElementById('calibShiftAll').checked = !store.get('ev_globalShift', null) && !Object.keys(store.get('ev_nodeFix', {})).length;
     renderCalib();
     calibTimer = setInterval(renderCalib, 1500);
 }
@@ -3656,22 +3668,38 @@ function calibNode(key) {
     if (!hasRealFix && !isSimulationMode) { showToast("GPS가 잡힌 뒤에 보정할 수 있어요"); return; }
     if (userPos.accuracy && userPos.accuracy > 30) { showToast(`GPS 오차가 ±${Math.round(userPos.accuracy)}m로 커요. 잠시 후 다시 눌러주세요`); return; }
     const fix = store.get('ev_nodeFix', {});
+    const shiftAll = document.getElementById('calibShiftAll').checked;
+    if (shiftAll) {
+        // 이 장소의 '원래 좌표 → 내 위치' 차이만큼 보정 안 된 모든 장소를 이동
+        const dLat = userPos.lat - nodes[key].lat0, dLng = userPos.lng - nodes[key].lng0;
+        store.set('ev_globalShift', { dLat, dLng });
+        Object.values(nodes).forEach(n => { if (!fix[n.id]) { n.lat = n.lat0 + dLat; n.lng = n.lng0 + dLng; } });
+        document.getElementById('calibShiftAll').checked = false;
+    }
     fix[key] = { lat: +userPos.lat.toFixed(6), lng: +userPos.lng.toFixed(6) };
     store.set('ev_nodeFix', fix);
     nodes[key].lat = fix[key].lat; nodes[key].lng = fix[key].lng; nodes[key].fixed = true;
     applyNodeCoords();
     renderCalib();
-    showToast(`'${nodes[key].name}' 위치를 현재 위치로 보정했어요`);
+    showToast(shiftAll ? `'${nodes[key].name}' 기준으로 지도 전체를 보정했어요` : `'${nodes[key].name}' 위치를 현재 위치로 보정했어요`);
 }
 async function copyCalib() {
-    const txt = JSON.stringify(store.get('ev_nodeFix', {}));
+    const txt = JSON.stringify({ shift: store.get('ev_globalShift', null), fix: store.get('ev_nodeFix', {}) });
     try { await navigator.clipboard.writeText(txt); showToast("보정값을 복사했어요 — 채팅에 붙여넣어 주시면 앱에 영구 반영해 드려요"); }
     catch (e) { prompt("아래 내용을 복사하세요", txt); }
 }
 function resetCalib() {
-    store.set('ev_nodeFix', {});
+    store.set('ev_nodeFix', {}); store.set('ev_globalShift', null);
     showToast("보정을 초기화했어요 — 새로고침하면 원래 좌표로 돌아가요");
     setTimeout(() => location.reload(), 900);
+}
+
+// 검색 결과의 📍 버튼: '지금 여기 있어요' → 바로 보정
+function quickCalib(key) {
+    const first = !store.get('ev_globalShift', null) && !Object.keys(store.get('ev_nodeFix', {})).length;
+    document.getElementById('calibShiftAll').checked = first;
+    calibNode(key);
+    renderSearchResults();
 }
 
 // ---------- 검색 화면 ----------
@@ -3732,6 +3760,7 @@ function renderSearchResults() {
             </div>
             ${i.isRide ? `<button onclick="toggleFavorite('${i.key}', event); renderSearchResults()" class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${fav ? 'bg-amber-400 text-white' : 'bg-white dark:bg-slate-800 text-slate-300 border border-slate-200 dark:border-slate-700'}"><i class="fa-${fav ? 'solid' : 'regular'} fa-star"></i></button>` : ''}
             <button onclick="pickSearchResult('${i.key}')" class="h-10 px-3 rounded-xl bg-everland-600 text-white text-xs font-bold shrink-0">길안내</button>
+            <button onclick="quickCalib('${i.key}')" class="h-10 w-10 rounded-xl bg-blue-50 dark:bg-blue-900/30 text-blue-600 shrink-0 flex items-center justify-center" title="내가 지금 여기 있어요 (위치 보정)"><i class="fa-solid fa-location-dot"></i></button>
         </div>`;
     }).join('');
 }
