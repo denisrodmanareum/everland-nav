@@ -2206,6 +2206,9 @@
             <div class="mt-5 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-xs">
                 <p class="font-bold text-slate-800 dark:text-slate-200"><i class="fa-solid fa-map-location-dot text-everland-600"></i> 실제 길 데이터 (OpenStreetMap)</p>
                 <p id="osmStatus" class="text-slate-500 mt-0.5">대기 중</p>
+                <p id="osmUnmatched" class="text-amber-600 mt-0.5"></p>
+                <p class="font-bold text-slate-800 dark:text-slate-200 mt-3"><i class="fa-solid fa-stopwatch text-everland-600"></i> 대기시간 데이터</p>
+                <p id="diagWait" class="text-slate-500 mt-0.5">확인 중</p>
                 <button onclick="loadOSM(true)" class="mt-2 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-bold py-2 rounded-lg">다시 받기</button>
             </div>
             <button onclick="toggleModal('settingsModal'); openCalib()" class="w-full mt-5 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-bold text-xs py-3 rounded-xl"><i class="fa-solid fa-location-dot"></i> 현장 위치 보정 (좌표가 안 맞을 때)</button>
@@ -2330,7 +2333,7 @@ const nodes = {
     MAGIC_SWING: { name: "매직 스윙", lat: 37.2908, lng: 127.2045, zone: "매직랜드" },
     EURO_GARDEN: { name: "포시즌스 가든", lat: 37.2938, lng: 127.2052, zone: "유러피언 어드벤처" },
     ALPINE_REST: { name: "알파인 레스토랑", lat: 37.2948, lng: 127.2062, zone: "유러피언 어드벤처" },
-    T_EXPRESS: { name: "T 익스프레스", lat: 37.2960, lng: 127.2075, zone: "유러피언 어드벤처" },
+    T_EXPRESS: { name: "모니모RUSH(T익스)", lat: 37.2960, lng: 127.2075, zone: "유러피언 어드벤처" },
     ZOOTOPIA_ENT: { name: "주토피아 입구 (내리막)", lat: 37.2912, lng: 127.1995, zone: "주토피아" },
     PANDA_WORLD: { name: "판다월드", lat: 37.2928, lng: 127.1980, zone: "주토피아" },
     SAFARI_WORLD: { name: "사파리 월드", lat: 37.2938, lng: 127.1990, zone: "주토피아" },
@@ -2433,7 +2436,7 @@ let everHadFix = false;
 const NAV_SCALE = 1.9;           // 주행 중 확대 배율
 
 const attractionsData = [
-    { key: "T_EXPRESS", name: "T 익스프레스", zone: "유러피언 어드벤처", wait: 65, icon: "fa-train", desc: "최고 낙하각 77도의 우드 롤러코스터" },
+    { key: "T_EXPRESS", name: "모니모RUSH(T익스)", zone: "유러피언 어드벤처", wait: 65, icon: "fa-train", desc: "최고 낙하각 77도의 우드 롤러코스터" },
     { key: "SAFARI_WORLD", name: "사파리 월드", zone: "주토피아", wait: 50, icon: "fa-shield-cat", desc: "사자, 호랑이, 곰을 만나는 맹수 탐험" },
     { key: "LOST_VALLEY", name: "로스트 밸리", zone: "주토피아", wait: 45, icon: "fa-hippo", desc: "수륙양용차 타고 기린 먹이 주기" },
     { key: "AMAZON_EXP", name: "아마존 익스프레스", zone: "주토피아", wait: 40, icon: "fa-water", desc: "급류 보트 물살 모험" },
@@ -2493,7 +2496,8 @@ function startRealGeolocation() {
         pos => {
             if (isSimulationMode) return;
             hasRealFix = true;
-            updateUserLivePosition(pos.coords.latitude, pos.coords.longitude, "실시간 GPS", pos.coords.accuracy, pos.coords.heading);
+            const walking = pos.coords.speed != null && pos.coords.speed > 0.6;
+            updateUserLivePosition(pos.coords.latitude, pos.coords.longitude, "실시간 GPS", pos.coords.accuracy, walking ? pos.coords.heading : null);
         },
         err => {
             if (isSimulationMode) return;
@@ -2518,7 +2522,7 @@ function updateUserLivePosition(lat, lng, sourceLabel, accuracy = null, gpsHeadi
     const moved = haversine(userPos.lat, userPos.lng, lat, lng);
     let heading = userPos.heading;
     if (gpsHeading !== null && !isNaN(gpsHeading)) heading = gpsHeading;
-    else if (moved > 2) heading = bearing(userPos.lat, userPos.lng, lat, lng);
+    else if (moved > 4 && (!accuracy || moved > accuracy)) heading = bearing(userPos.lat, userPos.lng, lat, lng);   // 오차보다 크게 움직였을 때만 방향 갱신
 
     const firstFix = !everHadFix; everHadFix = true;
     userPos = { lat, lng, x: pt.x, y: pt.y, accuracy, heading };
@@ -2591,7 +2595,7 @@ function animate() {
 
     if (isFollowMode && !drag.active) {
         // 회전: 진행방향 위로
-        const targetRot = (headingUp && (currentDestKey || isSimulationMode || hasRealFix) && tb != null) ? tb : 0;
+        const targetRot = (headingUp && currentDestKey && tb != null) ? tb : 0;   // 회전은 길안내 중에만
         const diff = ((targetRot - mapRot + 540) % 360) - 180;
         mapRot = (mapRot + diff * 0.08 + 360) % 360;
         // 확대: 주행 중엔 가까이
@@ -2602,6 +2606,10 @@ function animate() {
         const ay = ins.top + (ins.h - ins.top - ins.bottom) * (currentDestKey ? 0.64 : 0.5);
         placeCanvasPoint(displayPos.x, displayPos.y, ax, ay);
     } else {
+        if (!currentDestKey && mapRot !== 0) {   // 안내가 없으면 북쪽 위로 천천히 복귀
+            const d = ((0 - mapRot + 540) % 360) - 180;
+            if (Math.abs(d) < 0.5) mapRot = 0; else { const ins = viewInsets(); const c = screenToCanvas(ins.w / 2, ins.h / 2); mapRot = (mapRot + d * 0.15 + 360) % 360; placeCanvasPoint(c.x, c.y, ins.w / 2, ins.h / 2); }
+        }
         updateMapTransform();
     }
 
@@ -3085,7 +3093,7 @@ function zoomToNearby() {
     const ins = viewInsets();
     const ds = attractionsData.map(a => Math.hypot(nodes[a.key].x - userPos.x, nodes[a.key].y - userPos.y)).sort((a, b) => a - b);
     const r = Math.max(ds[Math.min(3, ds.length - 1)] || 300, 120);
-    mapScale = Math.min(Math.max(Math.min(ins.w, ins.h - ins.top - ins.bottom) / 2 / r * 0.85, 0.35), 2.2);
+    mapScale = Math.min(Math.max(Math.min(ins.w, ins.h - ins.top - ins.bottom) / 2 / r * 0.85, 0.35), 1.2);
 }
 // 에버랜드 전체 보기
 function showWholePark() {
@@ -3293,15 +3301,27 @@ const LIVE_NAME_PATTERNS = {
     T_EXPRESS: /t\s?express|monimo/i, SAFARI_WORLD: /safari/i, LOST_VALLEY: /lost\s?valley/i, AMAZON_EXP: /amazon/i,
     PANDA_WORLD: /^panda\s?world/i, ROLLING_TRAIN: /rolling/i, HURRICANE: /hurricane/i, MAGIC_SWING: /magic\s?swing/i
 };
-let waitSource = 'demo', liveFetchedAt = 0, liveFailCount = 0;
+let waitSource = 'demo', liveFetchedAt = 0, liveFailCount = 0, liveError = '', liveVia = '';
+// 브라우저가 직접 요청을 막을 때를 대비한 공개 중계 경로 (공개 대기시간 데이터만 지나감)
+const LIVE_ROUTES = [
+    ['직접', u => u],
+    ['중계1', u => 'https://corsproxy.io/?url=' + encodeURIComponent(u)],
+    ['중계2', u => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u)]
+];
 
 async function fetchLiveWaits() {
     try {
-        const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), 12000);
-        const res = await fetch(LIVE_WAIT_URL, { signal: ctl.signal, cache: 'no-store' });
-        clearTimeout(tm);
-        if (!res.ok) throw new Error(res.status);
-        const json = await res.json();
+        let json = null, errs = [];
+        for (const [label, wrap] of LIVE_ROUTES) {
+            try {
+                const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), 10000);
+                const res = await fetch(wrap(LIVE_WAIT_URL), { signal: ctl.signal, cache: 'no-store' });
+                clearTimeout(tm);
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                json = await res.json(); liveVia = label; break;
+            } catch (e) { errs.push(`${label}: ${e.name === 'AbortError' ? '시간초과' : (e.message || '차단')}`); }
+        }
+        if (!json) throw new Error(errs.join(' / '));
         const rides = [...(json.rides || []), ...(json.lands || []).flatMap(l => l.rides || [])];
         let matched = 0;
         attractionsData.forEach(a => {
@@ -3310,11 +3330,11 @@ async function fetchLiveWaits() {
             a.wait = r.wait_time ?? a.wait; a.open = !!r.is_open; a.live = true; a.liveUpdated = r.last_updated;
             matched++;
         });
-        if (!matched) throw new Error('no match');
-        waitSource = 'live'; liveFetchedAt = Date.now(); liveFailCount = 0;
+        if (!matched) throw new Error('어트랙션 이름 매칭 0건');
+        waitSource = 'live'; liveFetchedAt = Date.now(); liveFailCount = 0; liveError = '';
         return true;
     } catch (e) {
-        liveFailCount++;
+        liveFailCount++; liveError = e.message || String(e);
         if (waitSource === 'live' && liveFailCount < 3) return true;   // 일시 오류면 직전 실시간 값 유지
         waitSource = 'demo';
         attractionsData.forEach(a => { a.live = false; a.open = true; });
@@ -3731,7 +3751,7 @@ function startFavoritesRoute() {
 // 데이터를 못 받으면 기존 간이 경로망으로 자동 전환됩니다.
 const OSM_ENDPOINTS = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter', 'https://maps.mail.ru/osm/tools/overpass/api/interpreter'];
 const OSM_PLACE_PATTERNS = {
-    T_EXPRESS: /t익스프레스|t-?express|티익스프레스/, SAFARI_WORLD: /사파리월드|safariworld/, LOST_VALLEY: /로스트밸리|lostvalley/,
+    T_EXPRESS: /t익스프레스|t-?express|티익스프레스|모니모|monimo/, SAFARI_WORLD: /사파리월드|safariworld/, LOST_VALLEY: /로스트밸리|lostvalley/,
     AMAZON_EXP: /아마존익스프레스|amazonexpress/, PANDA_WORLD: /판다월드|pandaworld/, ROLLING_TRAIN: /롤링(x|엑스)?트레인|rollingx/,
     HURRICANE: /허리케인|hurricane/, MAGIC_SWING: /매직스윙|magicswing/, CARNIVAL: /카니발광장|carnivalsquare/,
     EURO_GARDEN: /포시즌스가든|fourseasonsgarden/, ALPINE_REST: /알파인/, MAGIC_SQUARE: /매직랜드광장/, ZOOTOPIA_ENT: /주토피아입구/,
@@ -3805,6 +3825,17 @@ function buildOSM(data) {
         A.adj.push({ id: b, w, steps }); B.adj.push({ id: a, w, steps });
     });
     osm.ways = data.e.length;
+    // 서로 이어진 길 묶음(연결 요소)을 구해서 가장 큰 보행망만 길찾기에 사용
+    let comp = 0, best = -1, bestSize = 0;
+    osm.nodes.forEach(n => n.comp = -1);
+    osm.nodes.forEach(start => {
+        if (start.comp !== -1 || !start.adj.length) return;
+        let size = 0; const q = [start]; start.comp = comp;
+        while (q.length) { const c = q.pop(); size++; c.adj.forEach(a => { const nb = osm.nodes.get(a.id); if (nb.comp === -1) { nb.comp = comp; q.push(nb); } }); }
+        if (size > bestSize) { bestSize = size; best = comp; }
+        comp++;
+    });
+    osm.mainComp = best;
 
     // 어트랙션 이름 매칭 → 실제 좌표로 교정 (사용자가 직접 보정한 곳은 유지)
     const fix = store.get('ev_nodeFix', {});
@@ -3823,6 +3854,9 @@ function buildOSM(data) {
     applyNodeCoords();
     renderEdges();
     const nAttr = attractionsData.filter(a => nodes[a.key].osm).length;
+    const un = attractionsData.filter(a => !nodes[a.key].osm && !store.get('ev_nodeFix', {})[a.key]).map(a => a.name);
+    const ue = document.getElementById('osmUnmatched');
+    if (ue) ue.innerText = un.length ? `위치 자동교정 안 된 곳: ${un.join(', ')} → 현장에서 📍로 보정` : '';
     setOsmStatus(osm.ready ? `실제 보행로 ${osm.ways.toLocaleString()}구간 · 어트랙션 ${nAttr}/${attractionsData.length}곳 실제 위치` : '길 데이터가 부족해 간이 경로로 안내 중');
     if (osm.ready) showToast(`실제 길 데이터로 길찾기 준비 완료 (어트랙션 ${nAttr}곳 위치 자동 교정)`);
 }
@@ -3831,11 +3865,11 @@ function setOsmStatus(t) { osm.status = t; const el = document.getElementById('o
 function osmNearest(lat, lng) {
     const ci = Math.floor(lat / OSM_CELL), cj = Math.floor(lng / OSM_CELL);
     let best = null, bd = Infinity;
-    for (let r = 0; r <= 6 && (best === null || r <= 1); r++) {
+    for (let r = 0; r <= 14 && (best === null || r <= 1); r++) {
         for (let i = ci - r; i <= ci + r; i++) for (let j = cj - r; j <= cj + r; j++) {
             if (r && Math.abs(i - ci) !== r && Math.abs(j - cj) !== r) continue;
             (osm.grid.get(`${i}:${j}`) || []).forEach(id => {
-                const n = osm.nodes.get(id); if (!n.adj.length) return;
+                const n = osm.nodes.get(id); if (!n.adj.length || n.comp !== osm.mainComp) return;
                 const d = haversine(lat, lng, n.lat, n.lng);
                 if (d < bd) { bd = d; best = id; }
             });
@@ -3913,6 +3947,9 @@ function computeRouteToDest(destKey) {
     if (osm.ready) {
         const r = osmRoute(userPos.lat, userPos.lng, nodes[destKey].lat, nodes[destKey].lng);
         if (r && r.pts.length > 1) return pointsToNavPath([{ lat: userPos.lat, lng: userPos.lng }, ...r.pts], destKey);
+        // 실제 길로 못 이으면 정문 쪽으로 돌리지 말고 목적지로 직접 안내
+        showToast("이 구간은 길 데이터가 끊겨 있어 직선 방향으로 안내해요");
+        return pointsToNavPath([{ lat: userPos.lat, lng: userPos.lng }, { lat: nodes[destKey].lat, lng: nodes[destKey].lng }], destKey);
     }
     return findPathAStar(findNearestNodeToUser().node, destKey, isWheelchairMode);
 }
@@ -4421,6 +4458,10 @@ function renderWaitSource() {
     if (!el) return;
     if (waitSource === 'live') { el.className = 'text-emerald-600 font-bold'; el.innerHTML = '● 실시간 · <a href="https://queue-times.com/parks/125" target="_blank" rel="noopener" class="underline">Powered by Queue-Times.com</a>'; }
     else { el.className = 'text-amber-600 font-bold'; el.innerText = '추정치 (실시간 연결 안 됨)'; }
+    const d = document.getElementById('diagWait');
+    if (d) d.innerText = waitSource === 'live'
+        ? `실시간 연결됨 (${liveVia}) · ${attractionsData.filter(a => a.live).length}/${attractionsData.length}곳 · ${new Date(liveFetchedAt).toLocaleTimeString('ko-KR')}`
+        : `추정치 사용 중 — ${liveError || '연결 시도 중'}`;
 }
 
 function stampWaitTime() {
