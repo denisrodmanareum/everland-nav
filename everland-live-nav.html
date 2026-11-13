@@ -1406,6 +1406,12 @@
       background-color: color-mix(in oklab, var(--color-slate-800) 50%, transparent);
     }
   }
+  .dark\:bg-slate-800\/60:where(.dark, .dark *) {
+    background-color: color-mix(in srgb, oklch(27.9% 0.041 260.031) 60%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      background-color: color-mix(in oklab, var(--color-slate-800) 60%, transparent);
+    }
+  }
   .dark\:bg-slate-900:where(.dark, .dark *) {
     background-color: var(--color-slate-900);
   }
@@ -2185,6 +2191,11 @@
                     <input type="checkbox" id="settingWake" checked class="w-4 h-4 accent-everland-600">
                 </label>
             </div>
+            <div class="mt-5 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-xs">
+                <p class="font-bold text-slate-800 dark:text-slate-200"><i class="fa-solid fa-map-location-dot text-everland-600"></i> 실제 길 데이터 (OpenStreetMap)</p>
+                <p id="osmStatus" class="text-slate-500 mt-0.5">대기 중</p>
+                <button onclick="loadOSM(true)" class="mt-2 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-bold py-2 rounded-lg">다시 받기</button>
+            </div>
             <button onclick="toggleModal('settingsModal'); openCalib()" class="w-full mt-5 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-bold text-xs py-3 rounded-xl"><i class="fa-solid fa-location-dot"></i> 현장 위치 보정 (좌표가 안 맞을 때)</button>
             <button onclick="toggleModal('settingsModal')" class="w-full mt-2 bg-slate-900 dark:bg-slate-800 text-white font-bold text-xs py-3 rounded-xl shadow">닫기</button>
         </div>
@@ -2441,6 +2452,7 @@ window.addEventListener('load', () => {
     startRealGeolocation();
     setInterval(() => refreshWaitTimes(false), 20000);
     setupSmartQueue();
+    loadOSM();
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible' && currentDestKey) requestWakeLock();
     });
@@ -2605,7 +2617,7 @@ function distToNode(k) { return haversine(userPos.lat, userPos.lng, nodes[k].lat
 
 function findNearestNodeToUser() {
     let best = "GATE", min = Infinity;
-    Object.keys(nodes).forEach(k => { const d = distToNode(k); if (d < min) { min = d; best = k; } });
+    Object.keys(nodes).forEach(k => { if (nodes[k].tmp) return; const d = distToNode(k); if (d < min) { min = d; best = k; } });
     return { node: best, dist: min };
 }
 
@@ -2631,8 +2643,7 @@ function onDestinationSelected(key, fromCourse = false) {
     document.getElementById('planNextBox').classList.add('hidden');
     currentDestKey = key;
     document.getElementById('destinationSelect').value = key;
-    const nearest = findNearestNodeToUser();
-    const path = findPathAStar(nearest.node, key, isWheelchairMode);
+    const path = computeRouteToDest(key);
     if (!path) { showToast("경로를 찾을 수 없습니다."); return; }
     startRoute(path);
 
@@ -2648,7 +2659,7 @@ function onDestinationSelected(key, fromCourse = false) {
 }
 
 function pathHasStairs(path) {
-    for (let i = 0; i < path.length - 1; i++) if (edgeBetween(path[i], path[i + 1])?.hasStairs) return true;
+    for (let i = 0; i < path.length - 1; i++) if (segInfo(path[i], path[i + 1])?.hasStairs) return true;
     return false;
 }
 
@@ -2688,8 +2699,7 @@ function showRouteOverview(autoResume = true) {
 }
 
 function reroute() {
-    const nearest = findNearestNodeToUser();
-    const path = findPathAStar(nearest.node, currentDestKey, isWheelchairMode);
+    const path = computeRouteToDest(currentDestKey);
     if (!path) return;
     showToast("경로 이탈 감지 — 새 경로로 재탐색했습니다");
     lastSpoken = "";
@@ -2756,20 +2766,20 @@ function renderNavStatus() {
     let text, icon, voice;
 
     if (navIndex === 0) {
-        text = `'${next.name}' 방향으로 이동`;
+        text = next.name ? `'${next.name}' 방향으로 이동` : '표시된 길로 이동';
         icon = "fa-person-walking";
-        voice = `${next.name} 방향으로 이동하세요`;
+        voice = next.name ? `${next.name} 방향으로 이동하세요` : '경로를 따라 이동하세요';
     } else if (isLast) {
         text = `목적지 '${next.name}'`;
         icon = "fa-flag-checkered";
         voice = `잠시 후 목적지 ${next.name}에 도착합니다`;
     } else {
         const t = turnInfo(navPath[navIndex - 1], nextK, navPath[navIndex + 1]);
-        text = t.text === "직진" ? `'${next.name}' 지나 직진` : `'${next.name}'에서 ${t.text}`;
+        text = t.text === "직진" ? (next.name ? `'${next.name}' 지나 직진` : '계속 직진') : (next.name ? `'${next.name}'에서 ${t.text}` : t.text);
         icon = t.icon;
-        voice = `${Math.round(dNext / 10) * 10}미터 앞 ${next.name}에서 ${t.text}입니다`;
-        const nextEdge = edgeBetween(nextK, navPath[navIndex + 1]);
-        if (nextEdge?.hasStairs) { text += ` · 계단 ${nextEdge.stairCount}개`; voice += `. 이후 계단이 있습니다`; }
+        voice = t.text === "직진" ? '' : `${Math.round(dNext / 10) * 10}미터 앞${next.name ? ' ' + next.name + '에서' : '에서'} ${t.text}입니다`;
+        const nextEdge = segInfo(nextK, navPath[navIndex + 1]);
+        if (nextEdge?.hasStairs) { text += nextEdge.stairCount ? ` · 계단 ${nextEdge.stairCount}개` : ' · 이후 계단'; voice += `. 이후 계단이 있습니다`; }
     }
 
     // 상단 배너: 큰 거리 + 회전 안내
@@ -2783,10 +2793,10 @@ function renderNavStatus() {
 
     // '그다음' 안내
     const thenBox = document.getElementById('navThenBox');
-    if (navIndex >= 1 && navIndex + 2 < navPath.length) {
-        const t2 = turnInfo(nextK, navPath[navIndex + 1], navPath[navIndex + 2]);
+    const t2 = (navIndex >= 1 && navIndex + 2 < navPath.length) ? turnInfo(nextK, navPath[navIndex + 1], navPath[navIndex + 2]) : null;
+    if (t2 && t2.text !== '직진') {
         document.getElementById('navThenIcon').className = `fa-solid ${t2.icon}`;
-        document.getElementById('navThenText').innerText = `${nodes[navPath[navIndex + 1]].name} ${t2.text}`;
+        document.getElementById('navThenText').innerText = `${nodes[navPath[navIndex + 1]].name || ''} ${t2.text}`.trim();
         thenBox.classList.remove('hidden'); thenBox.classList.add('flex');
     } else if (navIndex + 1 === navPath.length - 1) {
         document.getElementById('navThenIcon').className = "fa-solid fa-flag-checkered";
@@ -2803,7 +2813,7 @@ function renderNavStatus() {
 
     if (dNext < VOICE_AHEAD_M && !spokenKeys.has(nextK)) {
         spokenKeys.add(nextK);
-        speakInstruction(voice);
+        if (voice) speakInstruction(voice);
     }
     if (lastStepsRenderIndex !== navIndex) { renderStepsList(); lastStepsRenderIndex = navIndex; }
 }
@@ -2818,15 +2828,15 @@ function renderStepsList() {
         if (i === 0) { icon = "fa-person-walking text-blue-600"; action = "출발 지점"; }
         else if (i === navPath.length - 1) { icon = "fa-flag-checkered text-red-500"; action = "도착 목적지"; }
         else { const t = turnInfo(navPath[i - 1], k, navPath[i + 1]); action = `${t.text}`; icon = `${t.icon} text-everland-600`; }
-        const edge = i < navPath.length - 1 ? edgeBetween(k, navPath[i + 1]) : null;
-        const stairs = edge?.hasStairs ? `<span class="ml-1 text-amber-600 font-bold">· 계단 ${edge.stairCount}개</span>` : "";
+        const edge = i < navPath.length - 1 ? segInfo(k, navPath[i + 1]) : null;
+        const stairs = edge?.hasStairs ? `<span class="ml-1 text-amber-600 font-bold">· 계단${edge.stairCount ? ' ' + edge.stairCount + '개' : ''}</span>` : "";
         const div = document.createElement('div');
         div.className = `flex items-center gap-3 p-2.5 rounded-2xl border text-xs ${current ? 'bg-everland-50 dark:bg-everland-900/30 border-everland-400' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-800'} ${done ? 'opacity-40' : ''}`;
         div.innerHTML = `
             <div class="w-8 h-8 bg-white dark:bg-slate-800 rounded-xl flex items-center justify-center shrink-0">
                 <i class="fa-solid ${done ? 'fa-check text-slate-400' : icon}"></i>
             </div>
-            <div><p class="font-bold text-slate-800 dark:text-slate-200">${n.name} <span class="font-normal text-slate-400">(${n.zone})</span></p>
+            <div><p class="font-bold text-slate-800 dark:text-slate-200">${n.name || (i === 0 ? '현재 위치' : '갈림길')} ${n.zone ? `<span class="font-normal text-slate-400">(${n.zone})</span>` : ''}</p>
             <p class="text-slate-500 dark:text-slate-400">${action}${stairs}</p></div>`;
         list.appendChild(div);
         if (current) setTimeout(() => div.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 50);
@@ -2968,7 +2978,7 @@ function teleportTo(x, y) {
     updateUserLivePosition(g.lat, g.lng, "시뮬레이터", 5);
     displayPos = { x: userPos.x, y: userPos.y };
     if (currentDestKey) {
-        const path = findPathAStar(findNearestNodeToUser().node, currentDestKey, isWheelchairMode);
+        const path = computeRouteToDest(currentDestKey);
         if (path) { showToast("위치 변경 — 경로를 다시 계산했습니다"); startRoute(path); }
     }
 }
@@ -2986,7 +2996,7 @@ function setWheelchairMode(on) {
         : "bg-everland-50 text-everland-700 dark:bg-everland-900/40 dark:text-everland-300 px-2.5 py-1 rounded-lg font-bold transition text-[11px]";
     showToast(on ? "무장벽 모드 켜짐 — 계단 없는 길 우선" : "일반 최단 도보 모드");
     if (currentDestKey) {
-        const path = findPathAStar(findNearestNodeToUser().node, currentDestKey, isWheelchairMode);
+        const path = computeRouteToDest(currentDestKey);
         if (path) startRoute(path);
     }
 }
@@ -3129,6 +3139,7 @@ function setupMapInteractions() {
 function renderEdges() {
     const layer = document.getElementById('edgeLayer');
     layer.innerHTML = '';
+    if (typeof osm !== 'undefined' && osm.ready) return;   // 실제 길 데이터가 있으면 지도 위 길을 그대로 사용
     rawEdges.forEach(e => {
         const a = nodes[e.from], b = nodes[e.to];
         const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
@@ -3194,7 +3205,7 @@ function renderZoneLabels() {
     const c = document.getElementById('zoneLabelsContainer');
     const colors = { "글로벌 페어": "text-slate-500", "주토피아": "text-emerald-700", "유러피언 어드벤처": "text-blue-700", "매직랜드": "text-purple-700", "아메리칸 어드벤처": "text-orange-700" };
     const groups = {};
-    Object.values(nodes).forEach(n => (groups[n.zone] = groups[n.zone] || []).push(n));
+    Object.values(nodes).filter(n => !n.tmp).forEach(n => (groups[n.zone] = groups[n.zone] || []).push(n));
     c.innerHTML = Object.entries(groups).map(([zone, ns]) => {
         const x = ns.reduce((s, n) => s + n.x, 0) / ns.length, y = Math.min(...ns.map(n => n.y)) - 55;
         return `<div class="absolute upright pointer-events-none" style="left:${x}px;top:${y}px;width:0;height:0;">
@@ -3205,7 +3216,7 @@ function renderZoneLabels() {
 function renderJunctions() {
     const c = document.getElementById('junctionMarkersContainer');
     const attractionKeys = new Set(attractionsData.map(a => a.key));
-    Object.values(nodes).filter(n => !attractionKeys.has(n.id)).forEach(n => {
+    Object.values(nodes).filter(n => !n.tmp && !attractionKeys.has(n.id)).forEach(n => {
         const d = document.createElement('div');
         d.className = "absolute pointer-events-none upright";
         d.style.cssText = `left:${n.x}px;top:${n.y}px;width:0;height:0;`;
@@ -3476,11 +3487,24 @@ function pathMeters(path) {
 }
 function walkMeters(from, to) {
     if (from === to) return 0;
-    const ck = `${from}|${to}|${isWheelchairMode}`;
-    if (!(ck in walkCache)) { const p = findPathAStar(from, to, isWheelchairMode); walkCache[ck] = p ? pathMeters(p) : Infinity; }
+    const ck = `${from}|${to}|${isWheelchairMode}|${osm.ready}`;
+    if (!(ck in walkCache)) {
+        if (osm.ready) { const r = osmRoute(nodes[from].lat, nodes[from].lng, nodes[to].lat, nodes[to].lng); if (r) return walkCache[ck] = r.m; }
+        const p = findPathAStar(from, to, isWheelchairMode); walkCache[ck] = p ? pathMeters(p) : Infinity;
+    }
     return walkCache[ck];
 }
-function walkFromUser(to) { const n = findNearestNodeToUser(); return n.dist + walkMeters(n.node, to); }
+function walkFromUser(to) {
+    if (osm.ready) {
+        const s = osmNearest(userPos.lat, userPos.lng);
+        if (s) {
+            const ck = `u${s.id}|${to}|${isWheelchairMode}`;
+            if (!(ck in walkCache)) { const r = osmRoute(userPos.lat, userPos.lng, nodes[to].lat, nodes[to].lng); walkCache[ck] = r ? r.m - s.dist : Infinity; }
+            return walkCache[ck] + s.dist;
+        }
+    }
+    const n = findNearestNodeToUser(); return n.dist + walkMeters(n.node, to);
+}
 
 // 주어진 순서대로 돌았을 때 타임라인
 function simulateOrder(order, start = planStartTime()) {
@@ -3579,7 +3603,7 @@ function previewFavoritesRoute() {
         const sheetH = el.getBoundingClientRect().height;
         const pts = [{ x: displayPos.x, y: displayPos.y }];
         let prev = findNearestNodeToUser().node;
-        best.order.forEach(k => { (findPathAStar(prev, k, isWheelchairMode) || [k]).forEach(n => pts.push(nodes[n])); prev = k; });
+        best.order.forEach(k => { routePointsBetween(prev, k).forEach(n => pts.push(n)); prev = k; });
         isFollowMode = false; refreshFollowBtn();
         const xs = pts.map(p => p.x), ys = pts.map(p => p.y);
         const w = Math.max(...xs) - Math.min(...xs), h = Math.max(...ys) - Math.min(...ys);
@@ -3592,8 +3616,7 @@ function previewFavoritesRoute() {
 function drawPlanPreviewOnMap(order) {
     let pts = [`${userPos.x},${userPos.y}`], prev = findNearestNodeToUser().node;
     order.forEach(k => {
-        const p = findPathAStar(prev, k, isWheelchairMode) || [k];
-        p.forEach(n => pts.push(`${nodes[n].x},${nodes[n].y}`));
+        routePointsBetween(prev, k).forEach(n => pts.push(`${n.x},${n.y}`));
         prev = k;
     });
     document.getElementById('activeRouteCasing').setAttribute('points', pts.join(' '));
@@ -3627,6 +3650,211 @@ function startFavoritesRoute() {
     startPlan(favPreviewPlan.order);
 }
 
+// ============================================================
+// 16. OpenStreetMap 실제 보행로 길찾기
+// ============================================================
+// 앱이 실행될 때 OSM(Overpass API)에서 에버랜드 안의 실제 길과 장소 이름을 받아와
+// ① 어트랙션 위치를 실제 좌표로 자동 교정하고 ② 실제 길 위로 A* 길찾기를 합니다.
+// 데이터를 못 받으면 기존 간이 경로망으로 자동 전환됩니다.
+const OSM_ENDPOINTS = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter', 'https://maps.mail.ru/osm/tools/overpass/api/interpreter'];
+const OSM_PLACE_PATTERNS = {
+    T_EXPRESS: /t익스프레스|t-?express|티익스프레스/, SAFARI_WORLD: /사파리월드|safariworld/, LOST_VALLEY: /로스트밸리|lostvalley/,
+    AMAZON_EXP: /아마존익스프레스|amazonexpress/, PANDA_WORLD: /판다월드|pandaworld/, ROLLING_TRAIN: /롤링(x|엑스)?트레인|rollingx/,
+    HURRICANE: /허리케인|hurricane/, MAGIC_SWING: /매직스윙|magicswing/, CARNIVAL: /카니발광장|carnivalsquare/,
+    EURO_GARDEN: /포시즌스가든|fourseasonsgarden/, ALPINE_REST: /알파인/, MAGIC_SQUARE: /매직랜드광장/, ZOOTOPIA_ENT: /주토피아입구/,
+    SKYWAY_DOWN: /스카이웨이.*하단|스카이크루즈.*하단/, GATE: /^(에버랜드)?정문$|maingate/
+};
+const osm = { ready: false, nodes: new Map(), grid: new Map(), ways: 0, matched: [], status: '대기 중' };
+const OSM_CELL = 0.0004;
+const cellKey = (lat, lng) => `${Math.floor(lat / OSM_CELL)}:${Math.floor(lng / OSM_CELL)}`;
+
+function osmQuery() {
+    const m = 0.002, b = `${GPS_BOUNDS.minLat - m},${GPS_BOUNDS.minLng - m},${GPS_BOUNDS.maxLat + m},${GPS_BOUNDS.maxLng + m}`;
+    return `[out:json][timeout:30];
+way["highway"~"^(footway|path|pedestrian|steps|living_street|service|residential|track|corridor|unclassified|cycleway|tertiary)$"](${b});
+out geom qt;
+nwr["name"]["highway"!~"."](${b});
+out center tags qt;`;
+}
+
+async function loadOSM(force = false) {
+    setOsmStatus('실제 길 데이터 확인 중…');
+    let data = null;
+    if (!force) { try { data = JSON.parse(localStorage.getItem('ev_osm_v1') || 'null'); } catch (e) {} }
+    if (!data) {
+        for (const url of OSM_ENDPOINTS) {
+            try {
+                const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), 35000);
+                const res = await fetch(url, { method: 'POST', body: 'data=' + encodeURIComponent(osmQuery()), headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, signal: ctl.signal });
+                clearTimeout(tm);
+                if (!res.ok) continue;
+                data = compactOSM(await res.json());
+                try { localStorage.setItem('ev_osm_v1', JSON.stringify(data)); } catch (e) {}
+                break;
+            } catch (e) { /* 다음 서버 시도 */ }
+        }
+    }
+    if (!data || !data.e.length) { setOsmStatus('실제 길 데이터를 못 받았어요 — 간이 경로로 안내 중'); return; }
+    buildOSM(data);
+}
+
+// 응답을 필요한 것만 남겨 작게 저장: n=[id,lat,lng], e=[a,b,계단여부], p=[이름,lat,lng]
+function compactOSM(json) {
+    const n = new Map(), e = [], p = [];
+    json.elements.forEach(el => {
+        if (el.type === 'way' && el.geometry && el.tags?.highway) {
+            const steps = el.tags.highway === 'steps' ? 1 : 0;
+            el.nodes.forEach((id, i) => {
+                const g = el.geometry[i]; if (!g) return;
+                n.set(id, [id, +g.lat.toFixed(6), +g.lon.toFixed(6)]);
+                if (i > 0) e.push([el.nodes[i - 1], id, steps]);
+            });
+        }
+        if (el.tags?.name && !el.tags.highway) {
+            const lat = el.lat ?? el.center?.lat, lon = el.lon ?? el.center?.lon;
+            if (lat) p.push([el.tags.name, +lat.toFixed(6), +lon.toFixed(6), el.tags.tourism || el.tags.attraction || el.tags.amenity || '']);
+        }
+    });
+    return { n: [...n.values()], e, p, t: Date.now() };
+}
+
+function buildOSM(data) {
+    osm.nodes.clear(); osm.grid.clear();
+    data.n.forEach(([id, lat, lng]) => {
+        osm.nodes.set(id, { id, lat, lng, adj: [] });
+        const ck = cellKey(lat, lng);
+        if (!osm.grid.has(ck)) osm.grid.set(ck, []);
+        osm.grid.get(ck).push(id);
+    });
+    data.e.forEach(([a, b, steps]) => {
+        const A = osm.nodes.get(a), B = osm.nodes.get(b); if (!A || !B) return;
+        const w = haversine(A.lat, A.lng, B.lat, B.lng);
+        A.adj.push({ id: b, w, steps }); B.adj.push({ id: a, w, steps });
+    });
+    osm.ways = data.e.length;
+
+    // 어트랙션 이름 매칭 → 실제 좌표로 교정 (사용자가 직접 보정한 곳은 유지)
+    const fix = store.get('ev_nodeFix', {});
+    osm.matched = [];
+    const norm = t => t.replace(/[\s·()\-_]/g, '').toLowerCase();
+    Object.entries(OSM_PLACE_PATTERNS).forEach(([key, re]) => {
+        const cands = data.p.filter(([name]) => re.test(norm(name)));
+        if (!cands.length) return;
+        cands.sort((x, y) => (y[3] === 'attraction') - (x[3] === 'attraction'));
+        const [name, lat, lng] = cands[0];
+        if (!fix[key]) { nodes[key].lat = lat; nodes[key].lng = lng; nodes[key].osm = true; }
+        osm.matched.push(`${nodes[key].name}→${name}`);
+    });
+    osm.ready = osm.nodes.size > 50;
+    Object.keys(walkCache).forEach(k => delete walkCache[k]);
+    applyNodeCoords();
+    renderEdges();
+    const nAttr = attractionsData.filter(a => nodes[a.key].osm).length;
+    setOsmStatus(osm.ready ? `실제 보행로 ${osm.ways.toLocaleString()}구간 · 어트랙션 ${nAttr}/${attractionsData.length}곳 실제 위치` : '길 데이터가 부족해 간이 경로로 안내 중');
+    if (osm.ready) showToast(`실제 길 데이터로 길찾기 준비 완료 (어트랙션 ${nAttr}곳 위치 자동 교정)`);
+}
+function setOsmStatus(t) { osm.status = t; const el = document.getElementById('osmStatus'); if (el) el.innerText = t; }
+
+function osmNearest(lat, lng) {
+    const ci = Math.floor(lat / OSM_CELL), cj = Math.floor(lng / OSM_CELL);
+    let best = null, bd = Infinity;
+    for (let r = 0; r <= 6 && (best === null || r <= 1); r++) {
+        for (let i = ci - r; i <= ci + r; i++) for (let j = cj - r; j <= cj + r; j++) {
+            if (r && Math.abs(i - ci) !== r && Math.abs(j - cj) !== r) continue;
+            (osm.grid.get(`${i}:${j}`) || []).forEach(id => {
+                const n = osm.nodes.get(id); if (!n.adj.length) return;
+                const d = haversine(lat, lng, n.lat, n.lng);
+                if (d < bd) { bd = d; best = id; }
+            });
+        }
+    }
+    return best === null ? null : { id: best, dist: bd };
+}
+
+function osmAStar(s, g, avoidStairs) {
+    if (s === g) return { ids: [s], m: 0 };
+    const G = osm.nodes.get(g);
+    const h = id => { const n = osm.nodes.get(id); return haversine(n.lat, n.lng, G.lat, G.lng); };
+    const gs = new Map([[s, 0]]), came = new Map(), heap = [[h(s), s]], closed = new Set();
+    const push = it => { heap.push(it); let i = heap.length - 1; while (i) { const p = (i - 1) >> 1; if (heap[p][0] <= heap[i][0]) break; [heap[p], heap[i]] = [heap[i], heap[p]]; i = p; } };
+    const pop = () => { const top = heap[0], last = heap.pop(); if (heap.length) { heap[0] = last; let i = 0; for (;;) { const l = 2 * i + 1, r = l + 1; let m = i; if (l < heap.length && heap[l][0] < heap[m][0]) m = l; if (r < heap.length && heap[r][0] < heap[m][0]) m = r; if (m === i) break; [heap[m], heap[i]] = [heap[i], heap[m]]; i = m; } } return top; };
+    let iter = 0;
+    while (heap.length && iter++ < 200000) {
+        const [, cur] = pop();
+        if (cur === g) { const ids = [cur]; let c = cur; while (came.has(c)) { c = came.get(c); ids.unshift(c); } return { ids, m: gs.get(g) }; }
+        if (closed.has(cur)) continue; closed.add(cur);
+        for (const nb of osm.nodes.get(cur).adj) {
+            const t = gs.get(cur) + nb.w + (nb.steps ? (avoidStairs ? 5000 : nb.w * 0.5) : 0);
+            if (t < (gs.get(nb.id) ?? Infinity)) { gs.set(nb.id, t); came.set(nb.id, cur); push([t + h(nb.id), nb.id]); }
+        }
+    }
+    return null;
+}
+
+// 두 지점 사이 실제 길 경로: 점 목록 + 미터 + 계단 표시
+function osmRoute(lat1, lng1, lat2, lng2) {
+    const a = osmNearest(lat1, lng1), b = osmNearest(lat2, lng2);
+    if (!a || !b) return null;
+    const r = osmAStar(a.id, b.id, isWheelchairMode);
+    if (!r) return null;
+    const pts = r.ids.map((id, i) => {
+        const n = osm.nodes.get(id), nx = r.ids[i + 1];
+        return { lat: n.lat, lng: n.lng, stepsNext: nx ? !!n.adj.find(x => x.id === nx)?.steps : false };
+    });
+    let m = a.dist + b.dist;
+    for (let i = 0; i < pts.length - 1; i++) m += haversine(pts[i].lat, pts[i].lng, pts[i + 1].lat, pts[i + 1].lng);
+    return { pts, m };
+}
+
+// 경로 점들을 안내용 꼭짓점(방향이 바뀌는 곳)으로 줄여서 임시 노드로 등록 → 기존 안내 로직 그대로 사용
+let tmpSeq = 0;
+function clearTmpNodes() { Object.keys(nodes).forEach(k => { if (nodes[k].tmp) delete nodes[k]; }); }
+function pointsToNavPath(pts, destKey) {
+    clearTmpNodes();
+    const keep = [pts[0]];
+    let acc = 0, stepCount = 0;
+    for (let i = 1; i < pts.length - 1; i++) {
+        const p = keep[keep.length - 1], c = pts[i], n = pts[i + 1];
+        acc += haversine(pts[i - 1].lat, pts[i - 1].lng, c.lat, c.lng);
+        if (pts[i - 1].stepsNext) stepCount++;
+        const b1 = bearing(p.lat, p.lng, c.lat, c.lng), b2 = bearing(c.lat, c.lng, n.lat, n.lng);
+        const turn = Math.abs(((b2 - b1 + 540) % 360) - 180);
+        if ((turn > 28 && acc > 8) || acc > 70 || c.stepsNext !== pts[i - 1].stepsNext) { keep.push({ ...c, stepsNext: c.stepsNext }); acc = 0; }
+    }
+    const keys = keep.map((p, i) => {
+        const k = `_t${++tmpSeq}`;
+        nodes[k] = { id: k, name: '', zone: '', lat: p.lat, lng: p.lng, tmp: true, stepsNext: !!p.stepsNext, ...gpsToCanvas(p.lat, p.lng) };
+        return k;
+    });
+    if (keys.length && destKey) {
+        // 마지막 꼭짓점이 목적지와 거의 같으면 목적지로 대체
+        const last = nodes[keys[keys.length - 1]];
+        if (haversine(last.lat, last.lng, nodes[destKey].lat, nodes[destKey].lng) < 12) keys.pop();
+        keys.push(destKey);
+    }
+    return keys;
+}
+
+// 현재 위치 → 목적지 경로(노드 키 목록). OSM이 있으면 실제 길, 없으면 간이 경로망
+function computeRouteToDest(destKey) {
+    if (osm.ready) {
+        const r = osmRoute(userPos.lat, userPos.lng, nodes[destKey].lat, nodes[destKey].lng);
+        if (r && r.pts.length > 1) return pointsToNavPath([{ lat: userPos.lat, lng: userPos.lng }, ...r.pts], destKey);
+    }
+    return findPathAStar(findNearestNodeToUser().node, destKey, isWheelchairMode);
+}
+// 두 장소 사이 지도 표시용 점 목록
+function routePointsBetween(fromKey, toKey) {
+    if (osm.ready) { const r = osmRoute(nodes[fromKey].lat, nodes[fromKey].lng, nodes[toKey].lat, nodes[toKey].lng); if (r) return r.pts.map(p => gpsToCanvas(p.lat, p.lng)); }
+    return (findPathAStar(fromKey, toKey, isWheelchairMode) || [toKey]).map(k => nodes[k]);
+}
+// 구간 계단 정보 (간이 경로망 + 실제 길 모두)
+function segInfo(a, b) {
+    const e = edgeBetween(a, b);
+    if (e) return e;
+    return nodes[a]?.stepsNext ? { hasStairs: true, stairCount: 0 } : null;
+}
+
 // ---------- 현장 위치 보정 ----------
 let calibTimer = null;
 function openCalib() {
@@ -3647,7 +3875,7 @@ function renderCalib() {
     document.getElementById('calibGps').innerText = hasRealFix || isSimulationMode
         ? `내 위치 ${userPos.lat.toFixed(5)}, ${userPos.lng.toFixed(5)} · 오차 ±${Math.round(acc || 0)}m ${acc && acc > 15 ? '(조금 기다려 주세요)' : '✓'}`
         : 'GPS 신호 대기 중 — 위치 권한을 허용해 주세요';
-    const list = Object.values(nodes).map(n => ({ n, d: distToNode(n.id) })).sort((a, b) => a.d - b.d);
+    const list = Object.values(nodes).filter(n => !n.tmp).map(n => ({ n, d: distToNode(n.id) })).sort((a, b) => a.d - b.d);
     document.getElementById('calibList').innerHTML = list.map(({ n, d }) => `
         <div class="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border ${d < 60 ? 'border-blue-300' : 'border-slate-100 dark:border-slate-800'}">
             <div class="flex-1 min-w-0">
@@ -3661,8 +3889,9 @@ function applyNodeCoords() {
     Object.keys(nodes).forEach(k => Object.assign(nodes[k], gpsToCanvas(nodes[k].lat, nodes[k].lng)));
     buildGraph();
     Object.keys(walkCache).forEach(k => delete walkCache[k]);
+    Object.keys(walkCache).forEach(k => delete walkCache[k]);
     renderEdges(); renderZoneLabels(); renderJunctions(); renderAttractionMarkers();
-    if (currentDestKey) { const p = findPathAStar(findNearestNodeToUser().node, currentDestKey, isWheelchairMode); if (p) startRoute(p); }
+    if (currentDestKey) { const p = computeRouteToDest(currentDestKey); if (p) startRoute(p); }
 }
 function calibNode(key) {
     if (!hasRealFix && !isSimulationMode) { showToast("GPS가 잡힌 뒤에 보정할 수 있어요"); return; }
@@ -3673,7 +3902,7 @@ function calibNode(key) {
         // 이 장소의 '원래 좌표 → 내 위치' 차이만큼 보정 안 된 모든 장소를 이동
         const dLat = userPos.lat - nodes[key].lat0, dLng = userPos.lng - nodes[key].lng0;
         store.set('ev_globalShift', { dLat, dLng });
-        Object.values(nodes).forEach(n => { if (!fix[n.id]) { n.lat = n.lat0 + dLat; n.lng = n.lng0 + dLng; } });
+        Object.values(nodes).forEach(n => { if (!fix[n.id] && !n.tmp && !n.osm) { n.lat = n.lat0 + dLat; n.lng = n.lng0 + dLng; } });
         document.getElementById('calibShiftAll').checked = false;
     }
     fix[key] = { lat: +userPos.lat.toFixed(6), lng: +userPos.lng.toFixed(6) };
@@ -3728,7 +3957,7 @@ function renderSearchResults() {
     });
     const q = normalize(document.getElementById('searchInput').value);
     const attractionKeys = new Set(attractionsData.map(a => a.key));
-    let items = Object.values(nodes).map(n => ({ key: n.id, name: n.name, zone: n.zone, isRide: attractionKeys.has(n.id) }));
+    let items = Object.values(nodes).filter(n => !n.tmp).map(n => ({ key: n.id, name: n.name, zone: n.zone, isRide: attractionKeys.has(n.id) }));
     if (searchFilter === 'fav') items = items.filter(i => favoriteKeys.has(i.key));
     if (searchFilter === 'ride') items = items.filter(i => i.isRide);
     if (searchFilter === 'place') items = items.filter(i => !i.isRide);
