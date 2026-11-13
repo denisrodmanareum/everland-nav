@@ -302,9 +302,6 @@
   .-right-2\.5 {
     right: calc(var(--spacing) * -2.5);
   }
-  .-right-3 {
-    right: calc(var(--spacing) * -3);
-  }
   .right-0 {
     right: 0px;
   }
@@ -434,6 +431,9 @@
   .h-1 {
     height: var(--spacing);
   }
+  .h-1\.5 {
+    height: calc(var(--spacing) * 1.5);
+  }
   .h-2 {
     height: calc(var(--spacing) * 2);
   }
@@ -487,6 +487,9 @@
   }
   .w-0\.5 {
     width: calc(var(--spacing) * 0.5);
+  }
+  .w-1\.5 {
+    width: calc(var(--spacing) * 1.5);
   }
   .w-2 {
     width: calc(var(--spacing) * 2);
@@ -591,6 +594,9 @@
   }
   .items-start {
     align-items: flex-start;
+  }
+  .items-stretch {
+    align-items: stretch;
   }
   .justify-around {
     justify-content: space-around;
@@ -1203,6 +1209,9 @@
   .tabular-nums {
     --tw-numeric-spacing: tabular-nums;
     font-variant-numeric: var(--tw-ordinal,) var(--tw-slashed-zero,) var(--tw-numeric-figure,) var(--tw-numeric-spacing,) var(--tw-numeric-fraction,);
+  }
+  .underline {
+    text-decoration-line: underline;
   }
   .antialiased {
     -webkit-font-smoothing: antialiased;
@@ -1872,7 +1881,7 @@
         .flash { animation: flash 1.2s infinite; }
         @keyframes slide-in { from { transform: translateY(-16px); opacity: 0 } to { transform: none; opacity: 1 } }
         .alert-in { animation: slide-in .3s ease-out; }
-        .upright { transform: rotate(var(--map-rot, 0deg)); }
+        .upright { transform: rotate(var(--map-rot, 0deg)) scale(var(--inv-scale, 1)); }
         #tileLayer img { position: absolute; max-width: none; user-select: none; -webkit-user-drag: none; }
         .tiles-invert { filter: invert(1) hue-rotate(180deg) brightness(.85) contrast(.9); }
         #tileLayer { background: #e5e7eb; }
@@ -2066,7 +2075,7 @@
             <div class="p-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shrink-0 flex items-center justify-between">
                 <div>
                     <h2 class="font-bold text-lg text-slate-900 dark:text-slate-100">실시간 어트랙션 대기시간</h2>
-                    <p class="text-xs text-slate-500 mt-0.5"><span id="waitUpdatedAt">-</span> · <span class="text-amber-600 font-bold">데모 추정치</span> · 탭하면 길찾기 시작</p>
+                    <p class="text-xs text-slate-500 mt-0.5"><span id="waitUpdatedAt">-</span> · <span id="waitSourceLabel" class="text-amber-600 font-bold">확인 중</span> · 탭하면 길찾기</p>
                 </div>
                 <button onclick="refreshWaitTimes(true)" class="bg-slate-100 dark:bg-slate-800 text-xs px-3 py-1.5 rounded-xl font-bold">새로고침</button>
             </div>
@@ -2451,6 +2460,7 @@ window.addEventListener('load', () => {
     requestAnimationFrame(animate);
     startRealGeolocation();
     setInterval(() => refreshWaitTimes(false), 20000);
+    refreshWaitTimes(false);
     setupSmartQueue();
     loadOSM();
     document.addEventListener('visibilitychange', () => {
@@ -3031,6 +3041,7 @@ function updateMapTransform() {
     const c = document.getElementById('mapCanvas');
     c.style.transform = `translate(${mapTranslateX}px, ${mapTranslateY}px) rotate(${-mapRot}deg) scale(${mapScale})`;
     c.style.setProperty('--map-rot', `${mapRot}deg`);
+    c.style.setProperty('--inv-scale', Math.max(1, 1.1 / mapScale).toFixed(3));   // 축소해도 표시가 읽히는 크기 유지
 }
 function screenToCanvas(sx, sy) { return rotVec((sx - mapTranslateX) / mapScale, (sy - mapTranslateY) / mapScale, mapRot); }
 function placeCanvasPoint(px, py, sx, sy) {
@@ -3226,7 +3237,8 @@ function renderJunctions() {
     });
 }
 
-function waitColor(w) { return w >= 50 ? 'bg-red-500' : w >= 30 ? 'bg-amber-500' : 'bg-emerald-500'; }
+function waitColor(w, open = true) { return !open ? 'bg-slate-400' : w >= 50 ? 'bg-red-500' : w >= 30 ? 'bg-amber-500' : 'bg-emerald-500'; }
+const waitText = a => a.open === false ? '운휴' : `${a.wait}분`;
 
 function renderAttractionMarkers() {
     const c = document.getElementById('attractionMarkersContainer');
@@ -3242,12 +3254,15 @@ function renderAttractionMarkers() {
             <div class="center-abs">
                 <div class="relative w-10 h-10 bg-everland-600 rounded-full border-2 border-white dark:border-slate-900 shadow-xl flex items-center justify-center text-white text-xs">
                     <i class="fa-solid ${item.icon}"></i>
-                    <span class="absolute -top-1.5 -right-3 ${waitColor(item.wait)} text-white font-bold text-[9px] px-1.5 rounded-full border border-white transition-colors">${item.wait}분</span>
+
                     ${favoriteKeys.has(item.key) ? '<span class="absolute -top-1.5 -left-2 w-4 h-4 bg-amber-400 text-white rounded-full border border-white flex items-center justify-center text-[8px]"><i class="fa-solid fa-star"></i></span>' : ''}
                     ${watchedKeys.has(item.key) ? '<span class="absolute -bottom-1 -left-1.5 w-4 h-4 bg-amber-400 text-white rounded-full border border-white flex items-center justify-center text-[8px]"><i class="fa-solid fa-bell"></i></span>' : ''}
                 </div>
             </div>
-            <span class="absolute bg-slate-900/95 text-white text-[10px] px-2.5 py-0.5 rounded-full shadow whitespace-nowrap font-medium" style="left:0;top:24px;transform:translateX(-50%)">${item.name}</span>`;
+            <div class="absolute flex items-stretch rounded-full shadow-lg overflow-hidden border-2 border-white dark:border-slate-900 whitespace-nowrap" style="left:0;top:22px;transform:translateX(-50%)">
+                <span class="bg-slate-900/95 text-white text-[10px] px-2 py-0.5 font-medium flex items-center">${item.name}</span>
+                <span class="${waitColor(item.wait, item.open !== false)} text-white text-[11px] px-2 py-0.5 font-bold flex items-center gap-1">${item.live ? '<span class="w-1.5 h-1.5 rounded-full bg-white flash"></span>' : ''}${waitText(item)}</span>
+            </div>`;
         c.appendChild(div);
     });
 }
@@ -3255,13 +3270,53 @@ function renderAttractionMarkers() {
 // ============================================================
 // 12. 대기시간 (데모: 20초마다 변동)
 // ============================================================
-// 실제 API가 있다면 이 함수 안에서 fetch로 받아 attractionsData[].wait 를 갱신하면 됩니다.
-function refreshWaitTimes(manual) {
-    attractionsData.forEach(a => {
-        const drift = Math.round((Math.random() - 0.5) * 10);
-        a.wait = Math.max(5, Math.min(a.base + 30, Math.max(a.base - 20, a.wait + drift)));
-        a.wait = Math.round(a.wait / 5) * 5;
-    });
+// 실시간 대기시간: Queue-Times.com 공개 데이터 (에버랜드 park 125, 약 5분 간격 갱신)
+// 못 받으면 데모 추정치로 자동 전환
+const LIVE_WAIT_URL = 'https://queue-times.com/parks/125/queue_times.json';
+const LIVE_NAME_PATTERNS = {
+    T_EXPRESS: /t\s?express|monimo/i, SAFARI_WORLD: /safari/i, LOST_VALLEY: /lost\s?valley/i, AMAZON_EXP: /amazon/i,
+    PANDA_WORLD: /^panda\s?world/i, ROLLING_TRAIN: /rolling/i, HURRICANE: /hurricane/i, MAGIC_SWING: /magic\s?swing/i
+};
+let waitSource = 'demo', liveFetchedAt = 0, liveFailCount = 0;
+
+async function fetchLiveWaits() {
+    try {
+        const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), 12000);
+        const res = await fetch(LIVE_WAIT_URL, { signal: ctl.signal, cache: 'no-store' });
+        clearTimeout(tm);
+        if (!res.ok) throw new Error(res.status);
+        const json = await res.json();
+        const rides = [...(json.rides || []), ...(json.lands || []).flatMap(l => l.rides || [])];
+        let matched = 0;
+        attractionsData.forEach(a => {
+            const r = rides.find(x => LIVE_NAME_PATTERNS[a.key]?.test(x.name));
+            if (!r) { a.live = false; return; }
+            a.wait = r.wait_time ?? a.wait; a.open = !!r.is_open; a.live = true; a.liveUpdated = r.last_updated;
+            matched++;
+        });
+        if (!matched) throw new Error('no match');
+        waitSource = 'live'; liveFetchedAt = Date.now(); liveFailCount = 0;
+        return true;
+    } catch (e) {
+        liveFailCount++;
+        if (waitSource === 'live' && liveFailCount < 3) return true;   // 일시 오류면 직전 실시간 값 유지
+        waitSource = 'demo';
+        attractionsData.forEach(a => { a.live = false; a.open = true; });
+        return false;
+    }
+}
+
+async function refreshWaitTimes(manual) {
+    // 실시간은 2분마다만 요청(서버 부담 최소화), 그 사이엔 화면만 갱신
+    if (manual || Date.now() - liveFetchedAt > 120000 || waitSource === 'demo') await fetchLiveWaits();
+    if (waitSource === 'demo') {
+        attractionsData.forEach(a => {
+            const drift = Math.round((Math.random() - 0.5) * 10);
+            a.wait = Math.max(5, Math.min(a.base + 30, Math.max(a.base - 20, a.wait + drift)));
+            a.wait = Math.round(a.wait / 5) * 5;
+        });
+    }
+    renderWaitSource();
     checkWaitAlerts();
     checkPlanDetour();
     if (!document.getElementById('tab-course').classList.contains('hidden')) { renderNowBest(); renderThemes(); }
@@ -3271,7 +3326,7 @@ function refreshWaitTimes(manual) {
     renderWaitList();
     populateDestinations();
     stampWaitTime();
-    if (manual) showToast("대기시간을 새로고침했습니다");
+    if (manual) showToast(waitSource === 'live' ? "실시간 대기시간을 새로 받았어요" : "실시간 데이터를 못 받아 추정치로 표시 중이에요");
 }
 // ============================================================
 // 12-1. 대기시간 변동 알림
@@ -3578,7 +3633,9 @@ function refreshFavRouteBtn() {
 
 let favPreviewPlan = null;
 function previewFavoritesRoute() {
-    const keys = favList();
+    const closed = favList().filter(k => A(k).open === false);
+    const keys = favList().filter(k => A(k).open !== false);
+    if (closed.length) showToast(`운휴 중이라 제외: ${closed.map(k => A(k).name).join(', ')}`);
     if (!keys.length) { showToast("대기시간 탭이나 동선 탭에서 ★로 가고 싶은 곳을 골라주세요"); switchTab('course'); return; }
     const start = planStartTime();
     const best = optimizeOrder(keys, start);       // 즐겨찾기만으로 모든 순서를 비교
@@ -3978,7 +4035,7 @@ function renderSearchResults() {
     }
     box.innerHTML = items.map(i => {
         const a = A(i.key), fav = favoriteKeys.has(i.key);
-        const meta = i.isRide ? `<span class="${a.wait >= 50 ? 'text-red-500' : a.wait >= 30 ? 'text-amber-600' : 'text-emerald-600'} font-bold">대기 ${a.wait}분</span> · ` : '';
+        const meta = i.isRide ? `<span class="${a.open === false ? 'text-slate-400' : a.wait >= 50 ? 'text-red-500' : a.wait >= 30 ? 'text-amber-600' : 'text-emerald-600'} font-bold">${a.open === false ? '운휴' : '대기 ' + a.wait + '분'}${a.live ? ' ●' : ''}</span> · ` : '';
         return `<div class="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
             <div onclick="pickSearchResult('${i.key}')" class="flex items-center gap-3 flex-1 min-w-0 cursor-pointer">
                 <div class="w-10 h-10 rounded-xl ${i.isRide ? 'bg-everland-600 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-500'} flex items-center justify-center shrink-0"><i class="fa-solid ${i.isRide ? a.icon : 'fa-location-dot'}"></i></div>
@@ -4038,7 +4095,7 @@ function renderFavPicker() {
 }
 
 function computePlan() {
-    const keys = [...favoriteKeys];
+    const keys = [...favoriteKeys].filter(k => A(k).open !== false);
     if (!keys.length) { showToast("먼저 ★로 가고 싶은 어트랙션을 골라주세요"); return; }
     const start = planStartTime();
     const best = optimizeOrder(keys, start);
@@ -4343,6 +4400,13 @@ function sqBanner(title, sub, color, onTap) {
     setTimeout(() => el.remove(), 15000);
 }
 
+function renderWaitSource() {
+    const el = document.getElementById('waitSourceLabel');
+    if (!el) return;
+    if (waitSource === 'live') { el.className = 'text-emerald-600 font-bold'; el.innerHTML = '● 실시간 · <a href="https://queue-times.com/parks/125" target="_blank" rel="noopener" class="underline">Powered by Queue-Times.com</a>'; }
+    else { el.className = 'text-amber-600 font-bold'; el.innerText = '추정치 (실시간 연결 안 됨)'; }
+}
+
 function stampWaitTime() {
     document.getElementById('waitUpdatedAt').innerText = `${new Date().toLocaleTimeString('ko-KR')} 업데이트`;
 }
@@ -4371,7 +4435,7 @@ function renderWaitList() {
                 <button onclick="toggleWatch('${item.key}', event)" class="w-9 h-9 rounded-xl flex items-center justify-center ${watchedKeys.has(item.key) ? 'bg-amber-100 text-amber-600 dark:bg-amber-900/40' : 'bg-slate-100 text-slate-400 dark:bg-slate-800'}" title="변동 알림">
                     <i class="fa-${watchedKeys.has(item.key) ? 'solid' : 'regular'} fa-bell"></i>
                 </button>
-                <span class="px-3 py-1.5 rounded-xl text-xs font-bold text-white ${waitColor(item.wait)} whitespace-nowrap">${item.wait}분</span>
+                <span class="px-3 py-1.5 rounded-xl text-xs font-bold text-white ${waitColor(item.wait, item.open !== false)} whitespace-nowrap">${waitText(item)}</span>
             </div>`;
         c.appendChild(card);
     });
@@ -4389,7 +4453,7 @@ function populateDestinations() {
         items.forEach(item => {
             const o = document.createElement('option');
             o.value = item.key;
-            o.innerText = `${favoriteKeys.has(item.key) ? '★ ' : ''}${item.name} (${item.zone} · 대기 ${item.wait}분)`;
+            o.innerText = `${favoriteKeys.has(item.key) ? '★ ' : ''}${item.name} (${item.zone} · ${item.open === false ? '운휴' : '대기 ' + item.wait + '분'})`;
             parent.appendChild(o);
         });
         if (label) sel.appendChild(parent);
