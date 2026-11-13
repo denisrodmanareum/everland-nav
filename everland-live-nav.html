@@ -3262,7 +3262,7 @@ function renderJunctions() {
 }
 
 function waitColor(w, open = true) { return !open ? 'bg-slate-400' : w >= 50 ? 'bg-red-500' : w >= 30 ? 'bg-amber-500' : 'bg-emerald-500'; }
-const waitText = a => a.open === false ? '운휴' : `${a.wait}분`;
+const waitText = a => a.open === false ? '운휴' : a.live ? `${a.wait}분` : `추정 ${a.wait}분`;   // 실시간이 아니면 '추정' 표시
 
 function renderAttractionMarkers() {
     const c = document.getElementById('attractionMarkersContainer');
