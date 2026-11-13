@@ -76,6 +76,7 @@
     --spacing: 0.25rem;
     --container-xs: 20rem;
     --container-sm: 24rem;
+    --container-md: 28rem;
     --text-xs: 0.75rem;
     --text-xs--line-height: calc(1 / 0.75);
     --text-sm: 0.875rem;
@@ -389,6 +390,9 @@
   .mt-3 {
     margin-top: calc(var(--spacing) * 3);
   }
+  .mt-4 {
+    margin-top: calc(var(--spacing) * 4);
+  }
   .mt-5 {
     margin-top: calc(var(--spacing) * 5);
   }
@@ -415,6 +419,9 @@
   }
   .ml-1\.5 {
     margin-left: calc(var(--spacing) * 1.5);
+  }
+  .block {
+    display: block;
   }
   .flex {
     display: flex;
@@ -539,6 +546,9 @@
   .max-w-full {
     max-width: 100%;
   }
+  .max-w-md {
+    max-width: var(--container-md);
+  }
   .max-w-sm {
     max-width: var(--container-sm);
   }
@@ -583,6 +593,9 @@
   .grid-cols-3 {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+  .grid-cols-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
   .flex-col {
     flex-direction: column;
   }
@@ -591,6 +604,9 @@
   }
   .items-center {
     align-items: center;
+  }
+  .items-end {
+    align-items: flex-end;
   }
   .items-start {
     align-items: flex-start;
@@ -947,6 +963,9 @@
   }
   .p-4 {
     padding: calc(var(--spacing) * 4);
+  }
+  .p-5 {
+    padding: calc(var(--spacing) * 5);
   }
   .p-6 {
     padding: calc(var(--spacing) * 6);
@@ -2080,7 +2099,10 @@
                     <h2 class="font-bold text-lg text-slate-900 dark:text-slate-100">실시간 어트랙션 대기시간</h2>
                     <p class="text-xs text-slate-500 mt-0.5"><span id="waitUpdatedAt">-</span> · <span id="waitSourceLabel" class="text-amber-600 font-bold">확인 중</span> · 탭하면 길찾기</p>
                 </div>
-                <button onclick="refreshWaitTimes(true)" class="bg-slate-100 dark:bg-slate-800 text-xs px-3 py-1.5 rounded-xl font-bold">새로고침</button>
+                <div class="flex flex-col gap-1.5 shrink-0">
+                    <a href="intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;package=com.samsung.everland.android.mobileApp;S.browser_fallback_url=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dcom.samsung.everland.android.mobileApp;end" class="bg-everland-600 text-white text-xs px-3 py-1.5 rounded-xl font-bold text-center">공식 앱 열기</a>
+                    <button onclick="refreshWaitTimes(true)" class="bg-slate-100 dark:bg-slate-800 text-xs px-3 py-1.5 rounded-xl font-bold">새로고침</button>
+                </div>
             </div>
             <div class="flex-1 overflow-y-auto p-4 space-y-3">
                 <div id="alertLogBox" class="hidden bg-white dark:bg-slate-900 rounded-2xl border border-amber-200 dark:border-amber-900/50 p-3">
@@ -2209,6 +2231,7 @@
                 <p id="osmUnmatched" class="text-amber-600 mt-0.5"></p>
                 <p class="font-bold text-slate-800 dark:text-slate-200 mt-3"><i class="fa-solid fa-stopwatch text-everland-600"></i> 대기시간 데이터</p>
                 <p id="diagWait" class="text-slate-500 mt-0.5">확인 중</p>
+                <a href="intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;package=com.samsung.everland.android.mobileApp;S.browser_fallback_url=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dcom.samsung.everland.android.mobileApp;end" class="mt-2 block text-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-bold py-2 rounded-lg">에버랜드 공식 앱에서 비교하기</a>
                 <button onclick="loadOSM(true)" class="mt-2 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-bold py-2 rounded-lg">다시 받기</button>
             </div>
             <button onclick="toggleModal('settingsModal'); openCalib()" class="w-full mt-5 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-bold text-xs py-3 rounded-xl"><i class="fa-solid fa-location-dot"></i> 현장 위치 보정 (좌표가 안 맞을 때)</button>
@@ -2231,6 +2254,25 @@
         <div class="p-3 grid grid-cols-2 gap-2 border-t border-slate-200 dark:border-slate-800 shrink-0">
             <button onclick="copyCalib()" class="bg-slate-900 text-white text-xs font-bold py-3 rounded-xl"><i class="fa-regular fa-copy"></i> 보정값 복사</button>
             <button onclick="resetCalib()" class="bg-slate-100 dark:bg-slate-800 text-xs font-bold py-3 rounded-xl">보정 초기화</button>
+        </div>
+    </div>
+
+    <!-- 공식 앱 대기시간 입력 -->
+    <div id="waitEdit" class="fixed inset-0 z-[70] bg-black/60 hidden items-end justify-center">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-t-3xl p-5">
+            <p class="text-xs text-slate-500">에버랜드 공식 앱에 나온 대기시간을 입력하세요</p>
+            <h3 id="waitEditTitle" class="font-bold text-lg mt-0.5">-</h3>
+            <div class="flex items-center gap-2 mt-3">
+                <input id="waitEditInput" type="number" inputmode="numeric" min="0" max="300" class="flex-1 bg-slate-100 dark:bg-slate-800 rounded-xl px-4 py-3 text-2xl font-bold focus:outline-none focus:ring-2 focus:ring-everland-500">
+                <span class="text-lg font-bold">분</span>
+            </div>
+            <div class="grid grid-cols-4 gap-2 mt-3" id="waitEditQuick"></div>
+            <div class="grid grid-cols-3 gap-2 mt-4">
+                <button onclick="saveWaitEdit('closed')" class="bg-slate-100 dark:bg-slate-800 text-xs font-bold py-3 rounded-xl">운휴</button>
+                <button onclick="closeWaitEdit()" class="bg-slate-100 dark:bg-slate-800 text-xs font-bold py-3 rounded-xl">취소</button>
+                <button onclick="saveWaitEdit()" class="bg-everland-600 text-white text-xs font-bold py-3 rounded-xl">저장</button>
+            </div>
+            <p class="text-[11px] text-slate-400 mt-3">입력값은 15분 동안 지도·최적 동선·알림에 우선 반영돼요</p>
         </div>
     </div>
 
@@ -2257,8 +2299,9 @@
         <p class="text-sm text-indigo-200 font-bold">스마트줄서기 예약 오픈</p>
         <h2 id="sqModalTitle" class="text-2xl font-bold mt-1">-</h2>
         <p id="sqModalCount" class="text-[88px] font-bold leading-none my-6 tabular-nums">10</p>
-        <a id="sqModalGo" href="https://www.everland.com/" target="_blank" rel="noopener" onclick="closeSqModal()" class="w-full max-w-xs bg-white text-indigo-700 font-bold text-lg py-5 rounded-3xl shadow-2xl">에버랜드 예약 화면 열기</a>
-        <p class="text-xs text-indigo-300 mt-3">버튼을 누르면 에버랜드 공식 사이트가 열려요. 앱이 설치돼 있으면 앱에서 바로 예약하세요.</p>
+        <a id="sqModalGo" href="intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;package=com.samsung.everland.android.mobileApp;S.browser_fallback_url=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dcom.samsung.everland.android.mobileApp;end" onclick="closeSqModal()" class="w-full max-w-xs bg-white text-indigo-700 font-bold text-lg py-5 rounded-3xl shadow-2xl">에버랜드 앱 열기</a>
+        <p class="text-xs text-indigo-300 mt-3">에버랜드 공식 앱이 바로 열려요 (없으면 Play 스토어로 이동).<br>앱에서 스마트줄서기를 직접 눌러 주세요.</p>
+        <a href="https://www.everland.com/" target="_blank" rel="noopener" class="text-xs text-indigo-200 underline mt-2">공식 웹사이트로 열기</a>
         <button onclick="closeSqModal()" class="mt-6 text-indigo-300 text-sm">닫기</button>
     </div>
 
@@ -3262,7 +3305,7 @@ function renderJunctions() {
 }
 
 function waitColor(w, open = true) { return !open ? 'bg-slate-400' : w >= 50 ? 'bg-red-500' : w >= 30 ? 'bg-amber-500' : 'bg-emerald-500'; }
-const waitText = a => a.open === false ? '운휴' : a.live ? `${a.wait}분` : `추정 ${a.wait}분`;   // 실시간이 아니면 '추정' 표시
+const waitText = a => a.open === false ? '운휴' : a.manual ? `공식 ${a.wait}분` : a.live ? `${a.wait}분` : `추정 ${a.wait}분`;   // 공식앱 입력값 / 실시간 / 추정
 
 function renderAttractionMarkers() {
     const c = document.getElementById('attractionMarkersContainer');
@@ -3325,6 +3368,8 @@ async function fetchLiveWaits() {
         const rides = [...(json.rides || []), ...(json.lands || []).flatMap(l => l.rides || [])];
         let matched = 0;
         attractionsData.forEach(a => {
+            if (a.manual && Date.now() - a.manualAt < 15 * 60000) return;   // 공식 앱에서 직접 입력한 값은 15분간 우선
+            a.manual = false;
             const r = rides.find(x => LIVE_NAME_PATTERNS[a.key]?.test(x.name));
             if (!r) { a.live = false; return; }
             a.wait = r.wait_time ?? a.wait; a.open = !!r.is_open; a.live = true; a.liveUpdated = r.last_updated;
@@ -3345,8 +3390,10 @@ async function fetchLiveWaits() {
 async function refreshWaitTimes(manual) {
     // 실시간은 2분마다만 요청(서버 부담 최소화), 그 사이엔 화면만 갱신
     if (manual || Date.now() - liveFetchedAt > 120000 || waitSource === 'demo') await fetchLiveWaits();
+    attractionsData.forEach(a => { if (a.manual && Date.now() - a.manualAt >= 15 * 60000) a.manual = false; });
     if (waitSource === 'demo') {
         attractionsData.forEach(a => {
+            if (a.manual) return;
             const drift = Math.round((Math.random() - 0.5) * 10);
             a.wait = Math.max(5, Math.min(a.base + 30, Math.max(a.base - 20, a.wait + drift)));
             a.wait = Math.round(a.wait / 5) * 5;
@@ -3587,12 +3634,9 @@ function walkMeters(from, to) {
 }
 function walkFromUser(to) {
     if (osm.ready) {
-        const s = osmNearest(userPos.lat, userPos.lng);
-        if (s) {
-            const ck = `u${s.id}|${to}|${isWheelchairMode}`;
-            if (!(ck in walkCache)) { const r = osmRoute(userPos.lat, userPos.lng, nodes[to].lat, nodes[to].lng); walkCache[ck] = r ? r.m - s.dist : Infinity; }
-            return walkCache[ck] + s.dist;
-        }
+        const ck = `u${cellKey(userPos.lat, userPos.lng)}|${to}|${isWheelchairMode}`;
+        if (!(ck in walkCache)) { const r = osmRoute(userPos.lat, userPos.lng, nodes[to].lat, nodes[to].lng); walkCache[ck] = r ? r.m : Infinity; }
+        if (walkCache[ck] !== Infinity) return walkCache[ck];
     }
     const n = findNearestNodeToUser(); return n.dist + walkMeters(n.node, to);
 }
@@ -3825,17 +3869,24 @@ function buildOSM(data) {
         A.adj.push({ id: b, w, steps }); B.adj.push({ id: a, w, steps });
     });
     osm.ways = data.e.length;
-    // 서로 이어진 길 묶음(연결 요소)을 구해서 가장 큰 보행망만 길찾기에 사용
-    let comp = 0, best = -1, bestSize = 0;
-    osm.nodes.forEach(n => n.comp = -1);
-    osm.nodes.forEach(start => {
-        if (start.comp !== -1 || !start.adj.length) return;
-        let size = 0; const q = [start]; start.comp = comp;
-        while (q.length) { const c = q.pop(); size++; c.adj.forEach(a => { const nb = osm.nodes.get(a.id); if (nb.comp === -1) { nb.comp = comp; q.push(nb); } }); }
-        if (size > bestSize) { bestSize = size; best = comp; }
-        comp++;
+    // 길 묶음(연결 요소) 계산 → 10m 이내로 끊긴 묶음끼리 이어 붙이기 → 다시 계산
+    labelComponents();
+    let bridges = 0;
+    osm.nodes.forEach(n => {
+        if (!n.adj.length) return;
+        const ci = Math.floor(n.lat / OSM_CELL), cj = Math.floor(n.lng / OSM_CELL);
+        let best = null, bd = 10;
+        for (let i = ci - 1; i <= ci + 1; i++) for (let j = cj - 1; j <= cj + 1; j++)
+            (osm.grid.get(`${i}:${j}`) || []).forEach(id => {
+                const m = osm.nodes.get(id);
+                if (m.comp === n.comp || !m.adj.length) return;
+                const d = haversine(n.lat, n.lng, m.lat, m.lng);
+                if (d < bd) { bd = d; best = m; }
+            });
+        if (best) { n.adj.push({ id: best.id, w: bd, steps: 0 }); best.adj.push({ id: n.id, w: bd, steps: 0 }); bridges++; }
     });
-    osm.mainComp = best;
+    if (bridges) labelComponents();
+    osm.bridges = bridges;
 
     // 어트랙션 이름 매칭 → 실제 좌표로 교정 (사용자가 직접 보정한 곳은 유지)
     const fix = store.get('ev_nodeFix', {});
@@ -3857,25 +3908,60 @@ function buildOSM(data) {
     const un = attractionsData.filter(a => !nodes[a.key].osm && !store.get('ev_nodeFix', {})[a.key]).map(a => a.name);
     const ue = document.getElementById('osmUnmatched');
     if (ue) ue.innerText = un.length ? `위치 자동교정 안 된 곳: ${un.join(', ')} → 현장에서 📍로 보정` : '';
-    setOsmStatus(osm.ready ? `실제 보행로 ${osm.ways.toLocaleString()}구간 · 어트랙션 ${nAttr}/${attractionsData.length}곳 실제 위치` : '길 데이터가 부족해 간이 경로로 안내 중');
+    setOsmStatus(osm.ready ? `실제 보행로 ${osm.ways.toLocaleString()}구간 (끊긴 곳 ${osm.bridges}군데 연결) · 어트랙션 ${nAttr}/${attractionsData.length}곳 실제 위치` : '길 데이터가 부족해 간이 경로로 안내 중');
     if (osm.ready) showToast(`실제 길 데이터로 길찾기 준비 완료 (어트랙션 ${nAttr}곳 위치 자동 교정)`);
+}
+function labelComponents() {
+    let comp = 0, best = -1, bestSize = 0;
+    osm.compSize = [];
+    osm.nodes.forEach(n => n.comp = -1);
+    osm.nodes.forEach(start => {
+        if (start.comp !== -1 || !start.adj.length) return;
+        let size = 0; const q = [start]; start.comp = comp;
+        while (q.length) { const c = q.pop(); size++; c.adj.forEach(a => { const nb = osm.nodes.get(a.id); if (nb.comp === -1) { nb.comp = comp; q.push(nb); } }); }
+        osm.compSize[comp] = size;
+        if (size > bestSize) { bestSize = size; best = comp; }
+        comp++;
+    });
+    osm.mainComp = best;
 }
 function setOsmStatus(t) { osm.status = t; const el = document.getElementById('osmStatus'); if (el) el.innerText = t; }
 
-function osmNearest(lat, lng) {
+// 반경 안에서 길 묶음별로 가장 가까운 지점
+function osmCandidates(lat, lng, rings = 6) {
     const ci = Math.floor(lat / OSM_CELL), cj = Math.floor(lng / OSM_CELL);
-    let best = null, bd = Infinity;
-    for (let r = 0; r <= 14 && (best === null || r <= 1); r++) {
-        for (let i = ci - r; i <= ci + r; i++) for (let j = cj - r; j <= cj + r; j++) {
-            if (r && Math.abs(i - ci) !== r && Math.abs(j - cj) !== r) continue;
-            (osm.grid.get(`${i}:${j}`) || []).forEach(id => {
-                const n = osm.nodes.get(id); if (!n.adj.length || n.comp !== osm.mainComp) return;
-                const d = haversine(lat, lng, n.lat, n.lng);
-                if (d < bd) { bd = d; best = id; }
-            });
-        }
+    const byComp = new Map();
+    for (let i = ci - rings; i <= ci + rings; i++) for (let j = cj - rings; j <= cj + rings; j++)
+        (osm.grid.get(`${i}:${j}`) || []).forEach(id => {
+            const n = osm.nodes.get(id); if (!n.adj.length) return;
+            const d = haversine(lat, lng, n.lat, n.lng);
+            const cur = byComp.get(n.comp);
+            if (!cur || d < cur.dist) byComp.set(n.comp, { id, dist: d });
+        });
+    return byComp;
+}
+// 가장 가까운 길 (특정 묶음으로 제한 가능)
+function osmNearest(lat, lng, comp = null) {
+    for (const rings of [2, 6, 14]) {
+        const c = osmCandidates(lat, lng, rings);
+        let best = null;
+        c.forEach((v, k) => { if ((comp === null || k === comp) && (!best || v.dist < best.dist)) best = v; });
+        if (best) return best;
     }
-    return best === null ? null : { id: best, dist: bd };
+    return null;
+}
+// 출발·도착이 같은 묶음 안에 있도록 붙일 지점 고르기 (붙이는 거리 합이 최소)
+function osmSnapPair(lat1, lng1, lat2, lng2) {
+    const A = osmCandidates(lat1, lng1, 6), B = osmCandidates(lat2, lng2, 6);
+    let best = null;
+    A.forEach((a, comp) => {
+        const b = B.get(comp); if (!b) return;
+        const cost = a.dist + b.dist - Math.min(osm.compSize[comp], 500) * 0.02;   // 큰 보행망을 살짝 우대
+        if (!best || cost < best.cost) best = { a, b, cost };
+    });
+    if (best) return [best.a, best.b];
+    const a = osmNearest(lat1, lng1, osm.mainComp), b = osmNearest(lat2, lng2, osm.mainComp);
+    return a && b ? [a, b] : null;
 }
 
 function osmAStar(s, g, avoidStairs) {
@@ -3900,8 +3986,9 @@ function osmAStar(s, g, avoidStairs) {
 
 // 두 지점 사이 실제 길 경로: 점 목록 + 미터 + 계단 표시
 function osmRoute(lat1, lng1, lat2, lng2) {
-    const a = osmNearest(lat1, lng1), b = osmNearest(lat2, lng2);
-    if (!a || !b) return null;
+    const pair = osmSnapPair(lat1, lng1, lat2, lng2);
+    if (!pair) return null;
+    const [a, b] = pair;
     const r = osmAStar(a.id, b.id, isWheelchairMode);
     if (!r) return null;
     const pts = r.ids.map((id, i) => {
@@ -4041,6 +4128,36 @@ function quickCalib(key) {
     renderSearchResults();
 }
 
+// ---------- 공식 앱 대기시간 직접 입력 ----------
+let waitEditKey = null;
+function openWaitEdit(key, ev) {
+    ev?.stopPropagation();
+    waitEditKey = key;
+    document.getElementById('waitEditTitle').innerText = A(key).name;
+    const inp = document.getElementById('waitEditInput'); inp.value = A(key).wait;
+    document.getElementById('waitEditQuick').innerHTML = [10, 20, 30, 40, 50, 60, 90, 120].map(m =>
+        `<button onclick="document.getElementById('waitEditInput').value=${m}; saveWaitEdit()" class="bg-slate-100 dark:bg-slate-800 text-sm font-bold py-2.5 rounded-xl">${m}</button>`).join('');
+    const el = document.getElementById('waitEdit'); el.classList.remove('hidden'); el.classList.add('flex');
+    setTimeout(() => inp.select(), 50);
+}
+function closeWaitEdit() { const el = document.getElementById('waitEdit'); el.classList.add('hidden'); el.classList.remove('flex'); }
+function saveWaitEdit(mode) {
+    const a = A(waitEditKey);
+    const prev = a.wait;
+    if (mode === 'closed') { a.open = false; }
+    else {
+        const v = parseInt(document.getElementById('waitEditInput').value, 10);
+        if (isNaN(v) || v < 0 || v > 300) { showToast("0~300 사이 숫자를 입력해 주세요"); return; }
+        a.wait = v; a.open = true;
+    }
+    a.manual = true; a.manualAt = Date.now(); a.live = false;
+    closeWaitEdit();
+    checkWaitAlerts(); checkPlanDetour();
+    renderAttractionMarkers(); renderPlanPill(); renderWaitList(); populateDestinations();
+    if (!document.getElementById('tab-course').classList.contains('hidden')) renderCourseTab();
+    showToast(mode === 'closed' ? `${a.name} 운휴로 표시` : `${a.name} 대기 ${prev}분 → ${a.wait}분 (공식 앱 값)`);
+}
+
 // ---------- 검색 화면 ----------
 let searchFilter = 'all';
 function openSearch(filter = 'all') {
@@ -4097,6 +4214,7 @@ function renderSearchResults() {
                     <p class="text-[11px] text-slate-500 truncate">${meta}도보 ${i.walkMin}분 · ${i.zone}</p>
                 </div>
             </div>
+            ${i.isRide ? `<button onclick="openWaitEdit('${i.key}', event)" class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-white dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700 text-[10px] font-bold" title="공식 앱 대기시간 입력"><i class="fa-solid fa-pen"></i></button>` : ''}
             ${i.isRide ? `<button onclick="toggleFavorite('${i.key}', event); renderSearchResults()" class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${fav ? 'bg-amber-400 text-white' : 'bg-white dark:bg-slate-800 text-slate-300 border border-slate-200 dark:border-slate-700'}"><i class="fa-${fav ? 'solid' : 'regular'} fa-star"></i></button>` : ''}
             <button onclick="pickSearchResult('${i.key}')" class="h-10 px-3 rounded-xl bg-everland-600 text-white text-xs font-bold shrink-0">길안내</button>
             <button onclick="quickCalib('${i.key}')" class="h-10 w-10 rounded-xl bg-blue-50 dark:bg-blue-900/30 text-blue-600 shrink-0 flex items-center justify-center" title="내가 지금 여기 있어요 (위치 보정)"><i class="fa-solid fa-location-dot"></i></button>
@@ -4415,7 +4533,7 @@ function sqTick() {
         else if (cnt.innerText !== 'GO!') {
             cnt.innerText = 'GO!';
             go.className = "w-full max-w-xs bg-amber-400 text-indigo-950 font-bold text-xl py-6 rounded-3xl shadow-2xl animate-pulse";
-            go.innerText = "지금 예약하러 가기 →";
+            go.innerText = "지금 에버랜드 앱 열기 →";
             if (navigator.vibrate) navigator.vibrate([300, 100, 300, 100, 300]);
             lastSpoken = ""; speakInstruction("지금 예약하세요!");
         }
@@ -4428,7 +4546,7 @@ function openSqModal(item) {
     document.getElementById('sqModalCount').innerText = Math.max(0, Math.ceil((sqTimeToday(item.time) - new Date()) / 1000));
     const go = document.getElementById('sqModalGo');
     go.className = "w-full max-w-xs bg-white text-indigo-700 font-bold text-lg py-5 rounded-3xl shadow-2xl";
-    go.innerText = "에버랜드 예약 화면 열기";
+    go.innerText = "에버랜드 앱 열기";
     const m = document.getElementById('sqModal');
     m.classList.remove('hidden'); m.classList.add('flex');
     requestWakeLock();
@@ -4492,7 +4610,7 @@ function renderWaitList() {
                 <button onclick="toggleWatch('${item.key}', event)" class="w-9 h-9 rounded-xl flex items-center justify-center ${watchedKeys.has(item.key) ? 'bg-amber-100 text-amber-600 dark:bg-amber-900/40' : 'bg-slate-100 text-slate-400 dark:bg-slate-800'}" title="변동 알림">
                     <i class="fa-${watchedKeys.has(item.key) ? 'solid' : 'regular'} fa-bell"></i>
                 </button>
-                <span class="px-3 py-1.5 rounded-xl text-xs font-bold text-white ${waitColor(item.wait, item.open !== false)} whitespace-nowrap">${waitText(item)}</span>
+                <button onclick="openWaitEdit('${item.key}', event)" class="px-3 py-1.5 rounded-xl text-xs font-bold text-white ${waitColor(item.wait, item.open !== false)} whitespace-nowrap">${waitText(item)} <i class="fa-solid fa-pen text-[9px] opacity-70"></i></button>
             </div>`;
         c.appendChild(card);
     });
