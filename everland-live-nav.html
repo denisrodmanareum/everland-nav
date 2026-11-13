@@ -1250,6 +1250,10 @@
     --tw-shadow: 0 20px 25px -5px var(--tw-shadow-color, rgb(0 0 0 / 0.1)), 0 8px 10px -6px var(--tw-shadow-color, rgb(0 0 0 / 0.1));
     box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
   }
+  .invert {
+    --tw-invert: invert(100%);
+    filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);
+  }
   .filter {
     filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);
   }
@@ -1861,7 +1865,7 @@
         .alert-in { animation: slide-in .3s ease-out; }
         .upright { transform: rotate(var(--map-rot, 0deg)); }
         #tileLayer img { position: absolute; max-width: none; user-select: none; -webkit-user-drag: none; }
-        .dark #tileLayer { filter: brightness(.9); }
+        .tiles-invert { filter: invert(1) hue-rotate(180deg) brightness(.85) contrast(.9); }
         #tileLayer { background: #e5e7eb; }
     </style>
 </head>
@@ -2560,7 +2564,7 @@ function animate() {
         // 위치: 주행 중엔 화면 아래쪽(앞이 더 많이 보이게)
         const ins = viewInsets();
         const ax = ins.w / 2;
-        const ay = ins.top + (ins.h - ins.top - ins.bottom) * (currentDestKey ? 0.7 : 0.5);
+        const ay = ins.top + (ins.h - ins.top - ins.bottom) * (currentDestKey ? 0.64 : 0.5);
         placeCanvasPoint(displayPos.x, displayPos.y, ax, ay);
     } else {
         updateMapTransform();
@@ -3133,16 +3137,16 @@ function renderEdges() {
 const TILE_Z = 18;
 // Esri 타일: API 키 없이 동작 (일반 지도 / 위성 / 다크)
 const TILE_SOURCES = {
-    street: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
-    dark: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+    street: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',   // 에버랜드 내부 길까지 그려져 있음
+    dark: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',     // 다크모드는 CSS로 반전
     satellite: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
 };
 let mapLayer = null;   // 로드 시 저장값 복원
 // 일반 지도는 국내 최대 확대 데이터가 없어 z16, 위성은 z18까지 선명
-const TILE_ZOOM = { street: 16, dark: 16, satellite: 18 };
+const TILE_ZOOM = { street: 18, dark: 18, satellite: 17 };
 function toggleMapLayer() {
     mapLayer = mapLayer === 'satellite' ? 'street' : 'satellite';
-    store.set('ev_layer2', mapLayer);
+    store.set('ev_layer3', mapLayer);
     renderTiles();
     showToast(mapLayer === 'satellite' ? '위성사진 지도로 전환' : '일반 지도로 전환');
 }
@@ -3153,12 +3157,13 @@ const tile2lat = (y, z) => { const n = Math.PI - 2 * Math.PI * y / 2 ** z; retur
 function renderTiles() {
     const layer = document.getElementById('tileLayer');
     layer.innerHTML = '';
-    if (mapLayer === null) mapLayer = store.get('ev_layer2', 'satellite');
+    if (mapLayer === null) mapLayer = store.get('ev_layer3', 'street');
     const dark = document.documentElement.classList.contains('dark');
     const srcKey = mapLayer === 'satellite' ? 'satellite' : (dark ? 'dark' : 'street');
     const src = TILE_SOURCES[srcKey];
     const Z = TILE_ZOOM[srcKey];
-    document.getElementById('mapAttribution').innerText = mapLayer === 'satellite' ? '© Esri, Maxar, Earthstar Geographics' : '© Esri, HERE, OpenStreetMap contributors';
+    document.getElementById('tileLayer').classList.toggle('tiles-invert', srcKey === 'dark');
+    document.getElementById('mapAttribution').innerText = mapLayer === 'satellite' ? '© Esri, Maxar, Earthstar Geographics' : '© OpenStreetMap contributors';
     document.getElementById('layerBtnIcon').className = mapLayer === 'satellite' ? 'fa-solid fa-map text-sm' : 'fa-solid fa-satellite text-sm';
     const m = 0.0008; // 가장자리 여유
     const x0 = Math.floor(lng2tile(GPS_BOUNDS.minLng - m, Z)), x1 = Math.floor(lng2tile(GPS_BOUNDS.maxLng + m, Z));
