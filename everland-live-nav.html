@@ -45,9 +45,12 @@
     --color-sky-300: oklch(82.8% 0.111 230.318);
     --color-sky-700: oklch(50% 0.134 242.749);
     --color-sky-900: oklch(39.1% 0.09 240.876);
+    --color-blue-50: oklch(97% 0.014 254.604);
+    --color-blue-300: oklch(80.9% 0.105 251.813);
     --color-blue-500: oklch(62.3% 0.214 259.815);
     --color-blue-600: oklch(54.6% 0.245 262.881);
     --color-blue-700: oklch(48.8% 0.243 264.376);
+    --color-blue-900: oklch(37.9% 0.146 265.522);
     --color-indigo-50: oklch(96.2% 0.018 272.314);
     --color-indigo-200: oklch(87% 0.065 274.039);
     --color-indigo-300: oklch(78.5% 0.115 274.713);
@@ -353,6 +356,12 @@
   .z-\[60\] {
     z-index: 60;
   }
+  .z-\[65\] {
+    z-index: 65;
+  }
+  .z-\[66\] {
+    z-index: 66;
+  }
   .z-\[70\] {
     z-index: 70;
   }
@@ -382,6 +391,9 @@
   }
   .mt-3 {
     margin-top: calc(var(--spacing) * 3);
+  }
+  .mt-5 {
+    margin-top: calc(var(--spacing) * 5);
   }
   .mt-6 {
     margin-top: calc(var(--spacing) * 6);
@@ -598,6 +610,9 @@
   .gap-2 {
     gap: calc(var(--spacing) * 2);
   }
+  .gap-2\.5 {
+    gap: calc(var(--spacing) * 2.5);
+  }
   .gap-3 {
     gap: calc(var(--spacing) * 3);
   }
@@ -702,6 +717,9 @@
   .border-amber-400 {
     border-color: var(--color-amber-400);
   }
+  .border-blue-300 {
+    border-color: var(--color-blue-300);
+  }
   .border-blue-500\/40 {
     border-color: color-mix(in srgb, oklch(62.3% 0.214 259.815) 40%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
@@ -770,6 +788,9 @@
     @supports (color: color-mix(in lab, red, red)) {
       background-color: color-mix(in oklab, var(--color-black) 60%, transparent);
     }
+  }
+  .bg-blue-50 {
+    background-color: var(--color-blue-50);
   }
   .bg-blue-500\/10 {
     background-color: color-mix(in srgb, oklch(62.3% 0.214 259.815) 10%, transparent);
@@ -858,9 +879,6 @@
       background-color: color-mix(in oklab, var(--color-slate-900) 95%, transparent);
     }
   }
-  .bg-transparent {
-    background-color: transparent;
-  }
   .bg-white {
     background-color: var(--color-white);
   }
@@ -880,6 +898,12 @@
     background-color: color-mix(in srgb, #fff 70%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
       background-color: color-mix(in oklab, var(--color-white) 70%, transparent);
+    }
+  }
+  .bg-white\/85 {
+    background-color: color-mix(in srgb, #fff 85%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      background-color: color-mix(in oklab, var(--color-white) 85%, transparent);
     }
   }
   .bg-white\/90 {
@@ -906,8 +930,8 @@
     --tw-gradient-to: var(--color-indigo-600);
     --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
   }
-  .p-2 {
-    padding: calc(var(--spacing) * 2);
+  .p-1\.5 {
+    padding: calc(var(--spacing) * 1.5);
   }
   .p-2\.5 {
     padding: calc(var(--spacing) * 2.5);
@@ -963,6 +987,9 @@
   .py-6 {
     padding-block: calc(var(--spacing) * 6);
   }
+  .py-10 {
+    padding-block: calc(var(--spacing) * 10);
+  }
   .pt-1 {
     padding-top: var(--spacing);
   }
@@ -981,11 +1008,14 @@
   .pb-4 {
     padding-bottom: calc(var(--spacing) * 4);
   }
-  .pl-2 {
-    padding-left: calc(var(--spacing) * 2);
+  .pb-6 {
+    padding-bottom: calc(var(--spacing) * 6);
   }
   .text-center {
     text-align: center;
+  }
+  .text-left {
+    text-align: left;
   }
   .text-2xl {
     font-size: var(--text-2xl);
@@ -1146,6 +1176,9 @@
   .text-sky-700 {
     color: var(--color-sky-700);
   }
+  .text-slate-300 {
+    color: var(--color-slate-300);
+  }
   .text-slate-400 {
     color: var(--color-slate-400);
   }
@@ -1217,6 +1250,9 @@
     --tw-shadow: 0 20px 25px -5px var(--tw-shadow-color, rgb(0 0 0 / 0.1)), 0 8px 10px -6px var(--tw-shadow-color, rgb(0 0 0 / 0.1));
     box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
   }
+  .filter {
+    filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);
+  }
   .backdrop-blur-md {
     --tw-backdrop-blur: blur(var(--blur-md));
     -webkit-backdrop-filter: var(--tw-backdrop-blur,) var(--tw-backdrop-brightness,) var(--tw-backdrop-contrast,) var(--tw-backdrop-grayscale,) var(--tw-backdrop-hue-rotate,) var(--tw-backdrop-invert,) var(--tw-backdrop-opacity,) var(--tw-backdrop-saturate,) var(--tw-backdrop-sepia,);
@@ -1249,6 +1285,13 @@
   .ease-out {
     --tw-ease: var(--ease-out);
     transition-timing-function: var(--ease-out);
+  }
+  .focus\:ring-2:focus {
+    --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
+    box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
+  }
+  .focus\:ring-everland-500:focus {
+    --tw-ring-color: var(--color-everland-500);
   }
   .focus\:outline-none:focus {
     --tw-outline-style: none;
@@ -1288,6 +1331,18 @@
     background-color: color-mix(in srgb, oklch(41.4% 0.112 45.904) 40%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
       background-color: color-mix(in oklab, var(--color-amber-900) 40%, transparent);
+    }
+  }
+  .dark\:bg-blue-900\/20:where(.dark, .dark *) {
+    background-color: color-mix(in srgb, oklch(37.9% 0.146 265.522) 20%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      background-color: color-mix(in oklab, var(--color-blue-900) 20%, transparent);
+    }
+  }
+  .dark\:bg-blue-900\/30:where(.dark, .dark *) {
+    background-color: color-mix(in srgb, oklch(37.9% 0.146 265.522) 30%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      background-color: color-mix(in oklab, var(--color-blue-900) 30%, transparent);
     }
   }
   .dark\:bg-emerald-900\/40:where(.dark, .dark *) {
@@ -1353,6 +1408,12 @@
       background-color: color-mix(in oklab, var(--color-slate-900) 70%, transparent);
     }
   }
+  .dark\:bg-slate-900\/85:where(.dark, .dark *) {
+    background-color: color-mix(in srgb, oklch(20.8% 0.042 265.755) 85%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      background-color: color-mix(in oklab, var(--color-slate-900) 85%, transparent);
+    }
+  }
   .dark\:bg-slate-900\/90:where(.dark, .dark *) {
     background-color: color-mix(in srgb, oklch(20.8% 0.042 265.755) 90%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
@@ -1368,11 +1429,17 @@
   .dark\:bg-slate-950:where(.dark, .dark *) {
     background-color: var(--color-slate-950);
   }
+  .dark\:bg-white:where(.dark, .dark *) {
+    background-color: var(--color-white);
+  }
   .dark\:text-amber-300:where(.dark, .dark *) {
     color: var(--color-amber-300);
   }
   .dark\:text-amber-400:where(.dark, .dark *) {
     color: var(--color-amber-400);
+  }
+  .dark\:text-blue-300:where(.dark, .dark *) {
+    color: var(--color-blue-300);
   }
   .dark\:text-emerald-300:where(.dark, .dark *) {
     color: var(--color-emerald-300);
@@ -1403,6 +1470,9 @@
   }
   .dark\:text-slate-400:where(.dark, .dark *) {
     color: var(--color-slate-400);
+  }
+  .dark\:text-slate-900:where(.dark, .dark *) {
+    color: var(--color-slate-900);
   }
   .dark\:text-white:where(.dark, .dark *) {
     color: var(--color-white);
@@ -1597,6 +1667,59 @@
   inherits: false;
   initial-value: 0 0 #0000;
 }
+@property --tw-blur {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-brightness {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-contrast {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-grayscale {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-hue-rotate {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-invert {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-opacity {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-saturate {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-sepia {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-drop-shadow {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-drop-shadow-color {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-drop-shadow-alpha {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 100%;
+}
+@property --tw-drop-shadow-size {
+  syntax: "*";
+  inherits: false;
+}
 @property --tw-backdrop-blur {
   syntax: "*";
   inherits: false;
@@ -1691,6 +1814,19 @@
       --tw-ring-offset-width: 0px;
       --tw-ring-offset-color: #fff;
       --tw-ring-offset-shadow: 0 0 #0000;
+      --tw-blur: initial;
+      --tw-brightness: initial;
+      --tw-contrast: initial;
+      --tw-grayscale: initial;
+      --tw-hue-rotate: initial;
+      --tw-invert: initial;
+      --tw-opacity: initial;
+      --tw-saturate: initial;
+      --tw-sepia: initial;
+      --tw-drop-shadow: initial;
+      --tw-drop-shadow-color: initial;
+      --tw-drop-shadow-alpha: 100%;
+      --tw-drop-shadow-size: initial;
       --tw-backdrop-blur: initial;
       --tw-backdrop-brightness: initial;
       --tw-backdrop-contrast: initial;
@@ -1761,11 +1897,13 @@
         <div id="tab-map" class="tab-content flex-1 flex flex-col relative overflow-hidden">
             <!-- 평상시 상단 UI -->
             <div id="mapTopUI" class="absolute top-3 left-3 right-3 z-20 flex flex-col gap-2">
-                <div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-2 rounded-2xl shadow-lg border border-slate-200/80 dark:border-slate-800 flex items-center gap-2">
-                    <div class="pl-2 text-slate-400"><i class="fa-solid fa-magnifying-glass"></i></div>
-                    <select id="destinationSelect" onchange="onDestinationSelected(this.value)" class="w-full bg-transparent text-sm py-1.5 focus:outline-none font-medium text-slate-800 dark:text-slate-200">
-                        <option value="" disabled selected>목적지 어트랙션 선택...</option>
-                    </select>
+                <div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-1.5 rounded-2xl shadow-lg border border-slate-200/80 dark:border-slate-800 flex items-center gap-1">
+                    <button onclick="openSearch('all')" class="flex-1 flex items-center gap-2.5 px-2.5 py-2 text-left">
+                        <i class="fa-solid fa-magnifying-glass text-slate-400"></i>
+                        <span class="text-sm font-medium text-slate-400">어트랙션 · 장소 검색</span>
+                    </button>
+                    <button onclick="openSearch('fav')" class="shrink-0 bg-amber-50 dark:bg-amber-900/30 text-amber-600 text-xs font-bold px-3 py-2 rounded-xl"><i class="fa-solid fa-star"></i> 즐겨찾기</button>
+                    <select id="destinationSelect" class="hidden"></select>
                 </div>
                 <div class="flex items-center justify-between bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-3 py-2 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 text-xs">
                     <div class="flex items-center gap-2 text-slate-700 dark:text-slate-300 font-medium">
@@ -1885,11 +2023,14 @@
                 <div class="w-10 h-1 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mt-2" onclick="toggleStepsList()"></div>
                 <div class="px-4 pt-2 pb-3 flex items-center justify-between gap-3">
                     <div class="min-w-0 flex-1" onclick="toggleStepsList()">
-                        <p class="leading-tight whitespace-nowrap"><span id="sheetEtaMin" class="text-2xl font-bold text-slate-900 dark:text-white">-</span>
+                        <p class="leading-tight whitespace-nowrap"><span id="sheetEtaMin" class="text-xl font-bold text-slate-900 dark:text-white">-</span>
                         <span id="sheetSummarySub" class="text-sm font-medium text-slate-500 ml-1.5">-</span></p>
                         <p class="text-xs text-slate-500 truncate mt-0.5"><i class="fa-solid fa-flag-checkered"></i> <span id="sheetDestTitle">-</span> · <span class="text-everland-600 font-bold">경로 목록 ▾</span></p>
                     </div>
                     <div class="flex items-center gap-2 shrink-0">
+                        <button onclick="openSearch('all')" class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center" title="검색 / 목적지 변경">
+                            <i class="fa-solid fa-magnifying-glass text-sm"></i>
+                        </button>
                         <button onclick="showRouteOverview()" class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center" title="경로 전체보기">
                             <i class="fa-solid fa-route text-sm"></i>
                         </button>
@@ -2037,8 +2178,41 @@
                     <input type="checkbox" id="settingWake" checked class="w-4 h-4 accent-everland-600">
                 </label>
             </div>
-            <button onclick="toggleModal('settingsModal')" class="w-full mt-6 bg-slate-900 dark:bg-slate-800 text-white font-bold text-xs py-3 rounded-xl shadow">닫기</button>
+            <button onclick="toggleModal('settingsModal'); openCalib()" class="w-full mt-5 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-bold text-xs py-3 rounded-xl"><i class="fa-solid fa-location-dot"></i> 현장 위치 보정 (좌표가 안 맞을 때)</button>
+            <button onclick="toggleModal('settingsModal')" class="w-full mt-2 bg-slate-900 dark:bg-slate-800 text-white font-bold text-xs py-3 rounded-xl shadow">닫기</button>
         </div>
+    </div>
+
+    <!-- 현장 위치 보정 -->
+    <div id="calibScreen" class="fixed inset-0 z-[66] bg-white dark:bg-slate-950 hidden flex-col">
+        <div class="flex items-center gap-2 p-3 border-b border-slate-200 dark:border-slate-800 shrink-0">
+            <button onclick="closeCalib()" class="w-10 h-10 rounded-xl flex items-center justify-center text-slate-600 dark:text-slate-300"><i class="fa-solid fa-arrow-left"></i></button>
+            <div class="flex-1"><p class="font-bold text-sm">현장 위치 보정</p><p class="text-[11px] text-slate-500" id="calibGps">GPS 대기 중</p></div>
+        </div>
+        <p class="text-xs text-slate-600 dark:text-slate-400 px-4 py-3 bg-blue-50 dark:bg-blue-900/20 shrink-0">그 장소 <b>입구(길 위)</b>에 서서 GPS 오차가 ±15m 이하일 때 <b>여기로</b>를 누르세요. 그 장소 좌표가 지금 내 위치로 바뀌고, 경로·도보시간도 다시 계산됩니다. 보정값은 이 폰에 저장돼요.</p>
+        <div id="calibList" class="flex-1 overflow-y-auto p-3 space-y-2"></div>
+        <div class="p-3 grid grid-cols-2 gap-2 border-t border-slate-200 dark:border-slate-800 shrink-0">
+            <button onclick="copyCalib()" class="bg-slate-900 text-white text-xs font-bold py-3 rounded-xl"><i class="fa-regular fa-copy"></i> 보정값 복사</button>
+            <button onclick="resetCalib()" class="bg-slate-100 dark:bg-slate-800 text-xs font-bold py-3 rounded-xl">보정 초기화</button>
+        </div>
+    </div>
+
+    <!-- 검색 화면 -->
+    <div id="searchScreen" class="fixed inset-0 z-[65] bg-white dark:bg-slate-950 hidden flex-col">
+        <div class="flex items-center gap-2 p-3 border-b border-slate-200 dark:border-slate-800 shrink-0">
+            <button onclick="closeSearch()" class="w-10 h-10 rounded-xl flex items-center justify-center text-slate-600 dark:text-slate-300"><i class="fa-solid fa-arrow-left"></i></button>
+            <input id="searchInput" oninput="renderSearchResults()" type="search" placeholder="예: 판다, T익스, 정문, 주토피아" class="flex-1 bg-slate-100 dark:bg-slate-800 rounded-xl px-3 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-everland-500">
+        </div>
+        <div class="flex items-center gap-2 px-3 py-2 shrink-0">
+            <button onclick="setSearchFilter('all')" id="sfAll" class="px-3 py-1.5 rounded-full text-xs font-bold">전체</button>
+            <button onclick="setSearchFilter('fav')" id="sfFav" class="px-3 py-1.5 rounded-full text-xs font-bold"><i class="fa-solid fa-star"></i> 즐겨찾기</button>
+            <button onclick="setSearchFilter('ride')" id="sfRide" class="px-3 py-1.5 rounded-full text-xs font-bold">어트랙션</button>
+            <button onclick="setSearchFilter('place')" id="sfPlace" class="px-3 py-1.5 rounded-full text-xs font-bold">장소·광장</button>
+        </div>
+        <div id="searchFavAction" class="hidden px-3 pb-2 shrink-0">
+            <button onclick="closeSearch(); switchTab('map'); previewFavoritesRoute()" class="w-full bg-amber-400 text-slate-900 text-xs font-bold py-3 rounded-xl shadow"><i class="fa-solid fa-route"></i> 즐겨찾기 <span id="searchFavN"></span>곳 최적 경로 보기 (대기시간 포함)</button>
+        </div>
+        <div id="searchResults" class="flex-1 overflow-y-auto px-3 pb-6 space-y-2"></div>
     </div>
 
     <!-- 스마트줄서기 정각 알림 -->
@@ -2075,7 +2249,7 @@ const M_PER_PX_X = (GPS_BOUNDS.maxLng - GPS_BOUNDS.minLng) * 111320 * Math.cos(C
 const M_PER_PX_Y = (GPS_BOUNDS.maxLat - GPS_BOUNDS.minLat) * 110574 / CANVAS_HEIGHT;
 
 const WALK_SPEED_MPM = 75;   // 도보 4.5km/h
-const ARRIVE_RADIUS_M = 18;  // 노드 도착 판정 반경
+const ARRIVE_RADIUS_M = 25;  // 노드 도착 판정 반경 (GPS 오차가 크면 자동으로 넓어짐)
 const OFFROUTE_M = 45;       // 이탈 판정 거리
 const VOICE_AHEAD_M = 40;    // 갈림길 음성 안내 시점
 const SIM_SPEED_MPS = 4;     // 시뮬레이터 보행 속도(데모용 약 3배속)
@@ -2131,6 +2305,11 @@ const nodes = {
     ROLLING_TRAIN: { name: "롤링 X 트레인", lat: 37.2895, lng: 127.1975, zone: "아메리칸 어드벤처" },
     HURRICANE: { name: "허리케인", lat: 37.2905, lng: 127.1965, zone: "아메리칸 어드벤처" }
 };
+// 현장에서 보정한 좌표가 있으면 덮어씀
+try {
+    const ov = JSON.parse(localStorage.getItem('ev_nodeFix') || '{}');
+    Object.entries(ov).forEach(([k, v]) => { if (nodes[k]) { nodes[k].lat = v.lat; nodes[k].lng = v.lng; nodes[k].fixed = true; } });
+} catch (e) {}
 Object.keys(nodes).forEach(k => { nodes[k].id = k; Object.assign(nodes[k], gpsToCanvas(nodes[k].lat, nodes[k].lng)); });
 
 const rawEdges = [
@@ -2153,6 +2332,7 @@ const rawEdges = [
 ];
 
 const graph = {};
+function buildGraph() {
 Object.keys(nodes).forEach(k => graph[k] = []);
 rawEdges.forEach(e => {
     const a = nodes[e.from], b = nodes[e.to];
@@ -2162,6 +2342,8 @@ rawEdges.forEach(e => {
     graph[e.from].push({ node: e.to, ...info });
     graph[e.to].push({ node: e.from, ...info });
 });
+}
+buildGraph();
 function edgeBetween(a, b) { return (graph[a] || []).find(n => n.node === b); }
 
 function findPathAStar(startKey, goalKey, avoidStairs = false) {
@@ -2476,6 +2658,8 @@ function setNavUI(on) {
     document.getElementById('mapTopUI').classList.toggle('hidden', on);
     if (on) { const fp = document.getElementById('favPreview'); fp.classList.add('hidden'); fp.classList.remove('flex'); }
     if (!on) document.getElementById('turnByTurnStepsList').classList.add('hidden');
+    // 알림 배너가 회전 안내 배너를 가리지 않도록 아래로
+    document.getElementById('alertStack').style.top = on ? '172px' : '';
 }
 
 // 경로 전체보기 (3.5초 뒤 자동으로 주행 화면 복귀)
@@ -2522,10 +2706,21 @@ function turnInfo(prevK, curK, nextK) {
 function updateNavigation() {
     if (!currentDestKey || !navPath.length) return;
 
-    // 진행: 앞쪽 노드 중 도착 반경 안에 들어온 가장 먼 노드까지 진행
+    // 진행 1: 앞쪽 노드 중 도착 반경 안에 들어온 가장 먼 노드까지 진행
+    const radius = Math.max(ARRIVE_RADIUS_M, Math.min((userPos.accuracy || 0) * 1.5, 45));
     for (let i = navPath.length - 1; i >= navIndex; i--) {
-        if (distToNode(navPath[i]) < ARRIVE_RADIUS_M) { navIndex = i + 1; break; }
+        if (distToNode(navPath[i]) < radius) { navIndex = i + 1; break; }
     }
+    // 진행 2: 노드를 정확히 안 밟아도, 다음 구간 쪽에 더 가까워졌거나 현재 구간 끝을 지나쳤으면 진행
+    if (navIndex > 0 && navIndex < navPath.length - 1) {
+        const a = nodes[navPath[navIndex - 1]], b = nodes[navPath[navIndex]], c = nodes[navPath[navIndex + 1]];
+        const dCur = pointToSegmentM(userPos, a, b), dNext = pointToSegmentM(userPos, b, c);
+        const dx = b.x - a.x, dy = b.y - a.y, len2 = dx * dx + dy * dy;
+        const t = len2 ? ((userPos.x - a.x) * dx + (userPos.y - a.y) * dy) / len2 : 0;
+        if ((dNext + 5 < dCur && distToNode(navPath[navIndex]) < 80) || t > 1.05) navIndex++;
+    }
+    // 출발 전: 첫 구간에 이미 올라서 있으면 바로 합류
+    if (navIndex === 0 && navPath.length > 1 && pointToSegmentM(userPos, nodes[navPath[0]], nodes[navPath[1]]) < radius) navIndex = 1;
     if (navIndex >= navPath.length) { onArrived(); return; }
 
     // 이탈 감지 (경로에 합류한 뒤부터)
@@ -2943,9 +3138,11 @@ const TILE_SOURCES = {
     satellite: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
 };
 let mapLayer = null;   // 로드 시 저장값 복원
+// 일반 지도는 국내 최대 확대 데이터가 없어 z16, 위성은 z18까지 선명
+const TILE_ZOOM = { street: 16, dark: 16, satellite: 18 };
 function toggleMapLayer() {
     mapLayer = mapLayer === 'satellite' ? 'street' : 'satellite';
-    store.set('ev_layer', mapLayer);
+    store.set('ev_layer2', mapLayer);
     renderTiles();
     showToast(mapLayer === 'satellite' ? '위성사진 지도로 전환' : '일반 지도로 전환');
 }
@@ -2956,20 +3153,22 @@ const tile2lat = (y, z) => { const n = Math.PI - 2 * Math.PI * y / 2 ** z; retur
 function renderTiles() {
     const layer = document.getElementById('tileLayer');
     layer.innerHTML = '';
-    if (mapLayer === null) mapLayer = store.get('ev_layer', 'street');
+    if (mapLayer === null) mapLayer = store.get('ev_layer2', 'satellite');
     const dark = document.documentElement.classList.contains('dark');
-    const src = TILE_SOURCES[mapLayer === 'satellite' ? 'satellite' : (dark ? 'dark' : 'street')];
+    const srcKey = mapLayer === 'satellite' ? 'satellite' : (dark ? 'dark' : 'street');
+    const src = TILE_SOURCES[srcKey];
+    const Z = TILE_ZOOM[srcKey];
     document.getElementById('mapAttribution').innerText = mapLayer === 'satellite' ? '© Esri, Maxar, Earthstar Geographics' : '© Esri, HERE, OpenStreetMap contributors';
     document.getElementById('layerBtnIcon').className = mapLayer === 'satellite' ? 'fa-solid fa-map text-sm' : 'fa-solid fa-satellite text-sm';
     const m = 0.0008; // 가장자리 여유
-    const x0 = Math.floor(lng2tile(GPS_BOUNDS.minLng - m, TILE_Z)), x1 = Math.floor(lng2tile(GPS_BOUNDS.maxLng + m, TILE_Z));
-    const y0 = Math.floor(lat2tile(GPS_BOUNDS.maxLat + m, TILE_Z)), y1 = Math.floor(lat2tile(GPS_BOUNDS.minLat - m, TILE_Z));
+    const x0 = Math.floor(lng2tile(GPS_BOUNDS.minLng - m, Z)), x1 = Math.floor(lng2tile(GPS_BOUNDS.maxLng + m, Z));
+    const y0 = Math.floor(lat2tile(GPS_BOUNDS.maxLat + m, Z)), y1 = Math.floor(lat2tile(GPS_BOUNDS.minLat - m, Z));
     for (let x = x0; x <= x1; x++) for (let y = y0; y <= y1; y++) {
-        const p1 = gpsToCanvas(tile2lat(y, TILE_Z), tile2lng(x, TILE_Z));
-        const p2 = gpsToCanvas(tile2lat(y + 1, TILE_Z), tile2lng(x + 1, TILE_Z));
+        const p1 = gpsToCanvas(tile2lat(y, Z), tile2lng(x, Z));
+        const p2 = gpsToCanvas(tile2lat(y + 1, Z), tile2lng(x + 1, Z));
         const img = new Image();
         img.decoding = 'async';
-        img.src = src.replace('{z}', TILE_Z).replace('{y}', y).replace('{x}', x);
+        img.src = src.replace('{z}', Z).replace('{y}', y).replace('{x}', x);
         img.style.cssText = `left:${p1.x}px;top:${p1.y}px;width:${p2.x - p1.x + 0.6}px;height:${p2.y - p1.y + 0.6}px;`;
         img.onerror = () => img.remove();
         layer.appendChild(img);
@@ -2996,7 +3195,7 @@ function renderJunctions() {
         d.className = "absolute pointer-events-none upright";
         d.style.cssText = `left:${n.x}px;top:${n.y}px;width:0;height:0;`;
         d.innerHTML = `<div class="center-abs w-3 h-3 rounded-full bg-white border-2 border-slate-400"></div>
-            <span class="absolute text-[10px] font-medium text-slate-500 dark:text-slate-400 whitespace-nowrap" style="left:0;top:9px;transform:translateX(-50%)">${n.name}</span>`;
+            <span class="absolute text-[10px] font-bold text-slate-700 dark:text-slate-200 bg-white/85 dark:bg-slate-900/85 px-1.5 rounded whitespace-nowrap" style="left:0;top:9px;transform:translateX(-50%)">${n.name}</span>`;
         c.appendChild(d);
     });
 }
@@ -3411,6 +3610,130 @@ function startFavoritesRoute() {
     if (!favPreviewPlan) return;
     closeFavPreview();
     startPlan(favPreviewPlan.order);
+}
+
+// ---------- 현장 위치 보정 ----------
+let calibTimer = null;
+function openCalib() {
+    const el = document.getElementById('calibScreen');
+    el.classList.remove('hidden'); el.classList.add('flex');
+    renderCalib();
+    calibTimer = setInterval(renderCalib, 1500);
+}
+function closeCalib() {
+    const el = document.getElementById('calibScreen');
+    el.classList.add('hidden'); el.classList.remove('flex');
+    clearInterval(calibTimer);
+}
+function renderCalib() {
+    const acc = userPos.accuracy;
+    document.getElementById('calibGps').innerText = hasRealFix || isSimulationMode
+        ? `내 위치 ${userPos.lat.toFixed(5)}, ${userPos.lng.toFixed(5)} · 오차 ±${Math.round(acc || 0)}m ${acc && acc > 15 ? '(조금 기다려 주세요)' : '✓'}`
+        : 'GPS 신호 대기 중 — 위치 권한을 허용해 주세요';
+    const list = Object.values(nodes).map(n => ({ n, d: distToNode(n.id) })).sort((a, b) => a.d - b.d);
+    document.getElementById('calibList').innerHTML = list.map(({ n, d }) => `
+        <div class="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border ${d < 60 ? 'border-blue-300' : 'border-slate-100 dark:border-slate-800'}">
+            <div class="flex-1 min-w-0">
+                <p class="font-bold text-sm truncate">${n.name} ${n.fixed ? '<span class="text-[10px] text-blue-600 font-bold">보정됨</span>' : ''}</p>
+                <p class="text-[11px] text-slate-500">앱 좌표까지 ${fmtDist(d)} · ${n.zone}</p>
+            </div>
+            <button onclick="calibNode('${n.id}')" class="h-10 px-4 rounded-xl bg-blue-600 text-white text-xs font-bold shrink-0">여기로</button>
+        </div>`).join('');
+}
+function applyNodeCoords() {
+    Object.keys(nodes).forEach(k => Object.assign(nodes[k], gpsToCanvas(nodes[k].lat, nodes[k].lng)));
+    buildGraph();
+    Object.keys(walkCache).forEach(k => delete walkCache[k]);
+    renderEdges(); renderZoneLabels(); renderJunctions(); renderAttractionMarkers();
+    if (currentDestKey) { const p = findPathAStar(findNearestNodeToUser().node, currentDestKey, isWheelchairMode); if (p) startRoute(p); }
+}
+function calibNode(key) {
+    if (!hasRealFix && !isSimulationMode) { showToast("GPS가 잡힌 뒤에 보정할 수 있어요"); return; }
+    if (userPos.accuracy && userPos.accuracy > 30) { showToast(`GPS 오차가 ±${Math.round(userPos.accuracy)}m로 커요. 잠시 후 다시 눌러주세요`); return; }
+    const fix = store.get('ev_nodeFix', {});
+    fix[key] = { lat: +userPos.lat.toFixed(6), lng: +userPos.lng.toFixed(6) };
+    store.set('ev_nodeFix', fix);
+    nodes[key].lat = fix[key].lat; nodes[key].lng = fix[key].lng; nodes[key].fixed = true;
+    applyNodeCoords();
+    renderCalib();
+    showToast(`'${nodes[key].name}' 위치를 현재 위치로 보정했어요`);
+}
+async function copyCalib() {
+    const txt = JSON.stringify(store.get('ev_nodeFix', {}));
+    try { await navigator.clipboard.writeText(txt); showToast("보정값을 복사했어요 — 채팅에 붙여넣어 주시면 앱에 영구 반영해 드려요"); }
+    catch (e) { prompt("아래 내용을 복사하세요", txt); }
+}
+function resetCalib() {
+    store.set('ev_nodeFix', {});
+    showToast("보정을 초기화했어요 — 새로고침하면 원래 좌표로 돌아가요");
+    setTimeout(() => location.reload(), 900);
+}
+
+// ---------- 검색 화면 ----------
+let searchFilter = 'all';
+function openSearch(filter = 'all') {
+    searchFilter = filter;
+    const sc = document.getElementById('searchScreen');
+    sc.classList.remove('hidden'); sc.classList.add('flex');
+    const inp = document.getElementById('searchInput');
+    inp.value = '';
+    renderSearchResults();
+    if (filter === 'all') setTimeout(() => inp.focus(), 50);
+}
+function closeSearch() {
+    const sc = document.getElementById('searchScreen');
+    sc.classList.add('hidden'); sc.classList.remove('flex');
+    document.getElementById('searchInput').blur();
+}
+function setSearchFilter(f) { searchFilter = f; renderSearchResults(); }
+const normalize = t => t.replace(/\s/g, '').toLowerCase();
+
+function renderSearchResults() {
+    ['all', 'fav', 'ride', 'place'].forEach(f => {
+        const id = { all: 'sfAll', fav: 'sfFav', ride: 'sfRide', place: 'sfPlace' }[f];
+        document.getElementById(id).className = `px-3 py-1.5 rounded-full text-xs font-bold ${searchFilter === f ? (f === 'fav' ? 'bg-amber-400 text-slate-900' : 'bg-slate-900 text-white dark:bg-white dark:text-slate-900') : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`;
+    });
+    const q = normalize(document.getElementById('searchInput').value);
+    const attractionKeys = new Set(attractionsData.map(a => a.key));
+    let items = Object.values(nodes).map(n => ({ key: n.id, name: n.name, zone: n.zone, isRide: attractionKeys.has(n.id) }));
+    if (searchFilter === 'fav') items = items.filter(i => favoriteKeys.has(i.key));
+    if (searchFilter === 'ride') items = items.filter(i => i.isRide);
+    if (searchFilter === 'place') items = items.filter(i => !i.isRide);
+    if (q) items = items.filter(i => normalize(i.name).includes(q) || normalize(i.zone).includes(q) || normalize(A(i.key)?.desc || '').includes(q));
+    items.forEach(i => i.walkMin = Math.round(walkFromUser(i.key) / WALK_SPEED_MPM));
+    items.sort((a, b) => (favoriteKeys.has(b.key) - favoriteKeys.has(a.key)) || (b.isRide - a.isRide) || a.walkMin - b.walkMin);
+
+    const favN = favoriteKeys.size;
+    document.getElementById('searchFavAction').classList.toggle('hidden', !(searchFilter === 'fav' && favN));
+    document.getElementById('searchFavN').innerText = favN;
+
+    const box = document.getElementById('searchResults');
+    if (!items.length) {
+        box.innerHTML = searchFilter === 'fav' && !q
+            ? '<p class="text-center text-sm text-slate-400 py-10">아직 즐겨찾기가 없어요<br><span class="text-xs">전체 탭에서 ☆를 눌러 추가하세요</span></p>'
+            : '<p class="text-center text-sm text-slate-400 py-10">검색 결과가 없어요</p>';
+        return;
+    }
+    box.innerHTML = items.map(i => {
+        const a = A(i.key), fav = favoriteKeys.has(i.key);
+        const meta = i.isRide ? `<span class="${a.wait >= 50 ? 'text-red-500' : a.wait >= 30 ? 'text-amber-600' : 'text-emerald-600'} font-bold">대기 ${a.wait}분</span> · ` : '';
+        return `<div class="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
+            <div onclick="pickSearchResult('${i.key}')" class="flex items-center gap-3 flex-1 min-w-0 cursor-pointer">
+                <div class="w-10 h-10 rounded-xl ${i.isRide ? 'bg-everland-600 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-500'} flex items-center justify-center shrink-0"><i class="fa-solid ${i.isRide ? a.icon : 'fa-location-dot'}"></i></div>
+                <div class="min-w-0">
+                    <p class="font-bold text-sm text-slate-900 dark:text-slate-100 truncate">${i.name}</p>
+                    <p class="text-[11px] text-slate-500 truncate">${meta}도보 ${i.walkMin}분 · ${i.zone}</p>
+                </div>
+            </div>
+            ${i.isRide ? `<button onclick="toggleFavorite('${i.key}', event); renderSearchResults()" class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${fav ? 'bg-amber-400 text-white' : 'bg-white dark:bg-slate-800 text-slate-300 border border-slate-200 dark:border-slate-700'}"><i class="fa-${fav ? 'solid' : 'regular'} fa-star"></i></button>` : ''}
+            <button onclick="pickSearchResult('${i.key}')" class="h-10 px-3 rounded-xl bg-everland-600 text-white text-xs font-bold shrink-0">길안내</button>
+        </div>`;
+    }).join('');
+}
+function pickSearchResult(key) {
+    closeSearch();
+    switchTab('map');
+    onDestinationSelected(key);
 }
 
 // ---------- 동선 탭 렌더 ----------
